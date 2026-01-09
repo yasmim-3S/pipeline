@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3S Strategy - CRM & Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Estilo para tabela densa */
+        .table-cell-dense { padding: 0.5rem 0.75rem; white-space: nowrap; font-size: 0.7rem; border-bottom: 1px solid #f1f5f9; }
+        .table-header { background-color: #f8fafc; color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 0.65rem; padding: 0.75rem; white-space: nowrap; border-bottom: 2px solid #e2e8f0; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-slate-900 text-white p-6 flex flex-col hidden md:flex transition-all duration-300 shadow-xl z-20">
+            <div class="flex items-center gap-3 mb-10">
+                <div class="bg-blue-600 p-2 rounded-lg font-bold text-xl shadow-lg shadow-blue-500/20">3S</div>
+                <span class="font-bold tracking-tight text-lg">Strategy</span>
+            </div>
+            
+            <nav class="space-y-2 flex-1">
+                <button onclick="switchTab('dash')" id="nav-dash" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-600 text-white font-semibold transition text-sm">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+                </button>
+                <button onclick="switchTab('list')" id="nav-list" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition text-sm">
+                    <i data-lucide="table-2" class="w-4 h-4"></i> Base de Dados
+                </button>
+                <button onclick="openModal()" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition text-sm">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i> Novo Lead
+                </button>
+            </nav>
+
+            <div class="pt-6 border-t border-slate-800 space-y-2">
+                <input type="file" id="csv-import" accept=".csv" class="hidden" onchange="importCSV(this)">
+                <button onclick="document.getElementById('csv-import').click()" class="w-full flex items-center gap-3 px-4 py-2 text-xs text-blue-400 hover:text-blue-300 font-bold uppercase tracking-wider transition">
+                    <i data-lucide="upload" class="w-3 h-3"></i> Importar CSV
+                </button>
+                <button onclick="exportCSV()" class="w-full flex items-center gap-3 px-4 py-2 text-xs text-slate-400 hover:text-white font-bold uppercase tracking-wider transition">
+                    <i data-lucide="download" class="w-3 h-3"></i> Exportar Excel
+                </button>
+                <button onclick="resetData()" class="w-full flex items-center gap-3 px-4 py-2 text-xs text-red-400 hover:text-red-300 font-bold uppercase tracking-wider transition">
+                    <i data-lucide="trash-2" class="w-3 h-3"></i> Limpar Base
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col h-screen overflow-hidden bg-white">
+            <!-- Header -->
+            <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0 shadow-sm z-10">
+                <h2 id="tab-title" class="font-black text-slate-800 uppercase tracking-widest text-sm italic">Dashboard Estratégico</h2>
+                <div class="flex items-center gap-4">
+                    <span id="date-now" class="text-[10px] text-slate-500 font-bold uppercase tracking-widest hidden sm:block"></span>
+                    <div class="h-8 w-8 rounded-full bg-slate-900 flex items-center justify-center text-[10px] font-bold text-white shadow-md">3S</div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div id="content-area" class="flex-1 overflow-y-auto p-4 md:p-8 custom-scroll bg-slate-50">
+                
+                <!-- DASHBOARD VIEW -->
+                <div id="view-dash" class="space-y-8 animate-in fade-in duration-500">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-blue-600 hover:shadow-md transition">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Total de Leads</p>
+                            <h3 id="stat-total" class="text-3xl font-black italic text-slate-800">0</h3>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-green-500 hover:shadow-md transition">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Calls Agendadas</p>
+                            <h3 id="stat-calls" class="text-3xl font-black text-green-600 italic">0</h3>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-orange-500 hover:shadow-md transition">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Em Aberto</p>
+                            <h3 id="stat-waiting" class="text-3xl font-black text-orange-500 italic">0</h3>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-red-600 hover:shadow-md transition">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Atrasados (SLA)</p>
+                            <h3 id="stat-late" class="text-3xl font-black text-red-600 italic">0</h3>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                            <h4 class="font-bold text-xs uppercase tracking-widest mb-6 flex items-center gap-2 text-slate-700">
+                                <i data-lucide="flame" class="text-orange-500 w-4 h-4"></i> Temperatura da Base
+                            </h4>
+                            <div id="chart-temp" class="space-y-5"></div>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                            <h4 class="font-bold text-xs uppercase tracking-widest mb-6 flex items-center gap-2 text-slate-700">
+                                <i data-lucide="map-pin" class="text-blue-600 w-4 h-4"></i> Regiões (Top 5)
+                            </h4>
+                            <div id="chart-region" class="space-y-5"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LIST VIEW (FULL TABLE) -->
+                <div id="view-list" class="hidden animate-in slide-in-from-bottom-4 duration-500 flex flex-col gap-6">
+                    
+                    <!-- Filtros Rápidos -->
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap gap-4 items-center justify-between">
+                         <div class="flex items-center gap-2">
+                             <div class="bg-blue-50 p-2 rounded-lg text-blue-600">
+                                 <i data-lucide="database" class="w-5 h-5"></i>
+                             </div>
+                             <div>
+                                 <h3 class="text-sm font-bold text-slate-800">Base Completa</h3>
+                                 <p class="text-[10px] text-slate-500 uppercase font-bold" id="table-count">0 Registros</p>
+                             </div>
+                         </div>
+                         <div class="flex gap-2">
+                             <!-- INPUT DE BUSCA ATUALIZADO PARA EXATA -->
+                             <input type="text" id="global-search" onkeyup="renderTable()" placeholder="Busca Exata (Ex: Ticket Sports)..." class="border border-slate-200 rounded-lg px-3 py-2 text-xs w-64 outline-blue-600 font-medium">
+                         </div>
+                    </div>
+
+                    <!-- TABELA FULL SCROLL -->
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex-1">
+                        <div class="overflow-x-auto custom-scroll" style="max-height: 70vh;">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="sticky top-0 z-10 shadow-sm">
+                                    <tr>
+                                        <th class="table-header w-10 text-center">#</th>
+                                        <th class="table-header min-w-[200px]">Lead_Empresa</th>
+                                        <th class="table-header min-w-[120px]">Categoria</th>
+                                        <th class="table-header min-w-[120px]">Setor</th>
+                                        <th class="table-header min-w-[120px]">Segmento</th>
+                                        <th class="table-header min-w-[150px]">Local_Regiao</th>
+                                        <th class="table-header min-w-[150px]">Responsavel_3S</th>
+                                        <th class="table-header min-w-[100px]">Data_Inicio</th>
+                                        <th class="table-header min-w-[120px]">Canal_Prospeccao</th>
+                                        <th class="table-header min-w-[150px]">Nome_Contato</th>
+                                        <th class="table-header min-w-[150px]">Cargo_Contato</th>
+                                        <th class="table-header min-w-[100px]">Temperatura</th>
+                                        <th class="table-header min-w-[100px]">Prioridade</th>
+                                        <th class="table-header min-w-[120px]">Status_Atual</th>
+                                        <th class="table-header min-w-[120px]">Data_Prevista</th>
+                                        <th class="table-header min-w-[120px]">Data_Real_Retorno</th>
+                                        <th class="table-header min-w-[120px]">Resultado</th>
+                                        <th class="table-header min-w-[200px]">Motivo_Desfecho</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="leads-table-body" class="bg-white"></tbody>
+                            </table>
+                        </div>
+                        <div id="empty-state" class="hidden p-12 text-center text-slate-400 text-sm">
+                            <div class="flex flex-col items-center gap-3">
+                                <div class="bg-slate-50 p-4 rounded-full">
+                                    <i data-lucide="file-spreadsheet" class="w-8 h-8 opacity-40"></i>
+                                </div>
+                                <p>A base está vazia. <br>Utilize o menu lateral para <b>Importar CSV</b>.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL FORMULARIO COMPLETO -->
+    <div id="modal-lead" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4 transition-all">
+        <div class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden border border-slate-700 flex flex-col max-h-[90vh]">
+            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
+                <div class="flex items-center gap-2">
+                     <div class="bg-blue-600 p-1.5 rounded text-white"><i data-lucide="pen-line" class="w-4 h-4"></i></div>
+                     <h3 id="modal-title" class="font-black text-slate-800 uppercase italic text-sm tracking-wider">Editar Lead</h3>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-red-500 transition"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            
+            <form id="lead-form" class="p-6 overflow-y-auto custom-scroll">
+                <input type="hidden" name="id" id="lead-id">
+
+                <!-- GRUPO 1: IDENTIFICAÇÃO -->
+                <div class="mb-6">
+                    <h4 class="text-xs font-black text-blue-600 uppercase tracking-widest mb-3 border-b border-blue-100 pb-1">1. Identificação do Lead</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase">Lead_Empresa *</label>
+                            <input name="empresa" id="f-empresa" required type="text" class="w-full border border-slate-200 rounded px-3 py-2 text-xs font-semibold outline-blue-600">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase">Categoria</label>
+                            <select name="categoria" id="f-categoria" class="w-full border border-slate-200 rounded px-3 py-2 text-xs outline-blue-600">
+                                <option>Staffs</option>
+                                <option>Locação de Equipamentos</option>
+                                <option>Internet para eventos</option>
+                                <option>Catracas</option>
+                                <option>Outros</option>
+                            </select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase">Setor</label>
+                            <select name="setor" id="f-setor" class="w-full border border-slate-200 rounded px-3 py-2 text-xs outline-blue-600">
+                                <option>Entretenimento</option>
+                                <option>Esportivos</option>
+                                <option>Estratégico</option>
+                                <option>Corporativo</option>
+                            </select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase">Segmento</label>
+                            <select name="segmento" id="f-segmento" class="w-full border border-slate-200 rounded px-3 py-2 text-xs outline-blue-600">
+                                <option>Ticketeiras</option>
+                                <option>Produtoras</option>
+                                <option>Clubes</option>
+                                <option>Tática</option>
+                                <option>Agência</option>
+                            </select>
+                        </div>
+                         <div class="space-y-1 md:col-span-2">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase">Local_Regiao</label>
+                            <input name="local" id="f-local" type="text" class="w-full border border-slate-200 rounded px-3 py-2 text-xs outline-blue-600">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GRUPO 2: PROSPECÇÃO -->
+                <div class="mb-6">
+                    <h4 class="text-xs font-black text-orange-500 uppercase tracking-widest mb-3 border-b border-orange-100 pb-1">2. Dados de Prospecção</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="space-y-1 md:col-span-2">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase">Responsavel_3S</label>
+                            <input name="responsavel" id="f-responsavel" type="text" class="w-full border border-slate-200 rounded px-3 py-2 text-xs outline-blue-600">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase">Data_Inicio</label>
+                            <input name="data_inicio" id="f-data_inicio" type="date" class="w-full border border-slate-200 rounded px-3 py-2 text-xs outline-blue-600">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase">Canal_Prospeccao</label>
+                            <input name="canal" id="f-canal" list="canais" class="w-full border border-slate-200 rounded px-3 py-2 text-xs outline-blue-600">
+                            <datalist id="canais">
+                                <option value="LinkedIn">
+                                <option value="WhatsApp">
+                                <option value="E-mail">
+                                <option value="Cold Call">
+                                <option value="Indicação">
+                            </datalist>
+                        </div>
+                        <div class="space-y-1 md:col-span-2">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase">Nome_Contato</label>
+                            <input name="contato_nome" id="f-contato_nome" type="text" class="w-full border border-slate-200 rounded px-3 py-2 text-xs outline-blue-600">
+                        </div>
+                        <div class="space-y-1 md:col-span-2">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase">Cargo_Contato</label>
+                            <input name="contato_cargo" id="f-contato_cargo" type="text" class="w-full border border-slate-200 rounded px-3 py-2 text-xs outline-blue-600">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GRUPO 3: STATUS E FOLLOW-UP -->
+                <div class="mb-2">
+                    <h4 class="text-xs font-black text-green-600 uppercase tracking-widest mb-3 border-b border-green-100 pb-1">3. Status e Controle</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase">Status_Atual *</label>
+                            <select name="status" id="f-status" required class="w-full border border-slate-200 rounded px-3 py-2 text-xs outline-blue-600 font-bold text-slate-700">
+                                <option>Mapeado</option>
+                                <option>Prospecção Ativa</option>
+                                <option>Aguardando Retorno</option>
+                                <option>Call Agendada</option>
+                                <option>Negativa</option>
+                            </select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase">Prioridade</label>
+                            <select name="prioridade" id="f-prioridade" class="w-full border border-slate-200 rounded px-3 py-2 text-xs outline-blue-600">
+                                <option value="Baixa">Baixa</option>
+                                <option value="Média">Média</option>
+                                <option value="Alta">Alta</option>
+                            </select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase">Temperatura</label>
+                            <select name="temperatura" id="f-temperatura" class="w-full border border-slate-200 rounded px-3 py-2 text-xs outline-blue-600">
+                                <option value="Frio">Frio ❄️</option>
+                                <option value="Morno">Morno ⚡</option>
+                                <option value="Quente">Quente 🔥</option>
+                            </select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase">Data_Prevista_Retorno</label>
+                            <input name="data_previsao" id="f-data_previsao" type="date" class="w-full border border-slate-200 rounded px-3 py-2 text-xs outline-blue-600">
+                        </div>
+
+                        <!-- Campos de Retorno/Desfecho -->
+                         <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase">Data_Real_Retorno</label>
+                            <input name="data_real_retorno" id="f-data_real_retorno" type="date" class="w-full border border-slate-200 rounded px-3 py-2 text-xs outline-blue-600">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase">Resultado</label>
+                            <input name="resultado" id="f-resultado" type="text" class="w-full border border-slate-200 rounded px-3 py-2 text-xs outline-blue-600">
+                        </div>
+                        <div class="space-y-1 md:col-span-2">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase">Motivo_Desfecho</label>
+                            <input name="motivo" id="f-motivo" type="text" class="w-full border border-slate-200 rounded px-3 py-2 text-xs outline-blue-600" placeholder="Ex: Preço alto, já tem fornecedor...">
+                        </div>
+                    </div>
+                </div>
+
+            </form>
+            
+            <div class="p-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 shrink-0">
+                <button type="button" onclick="closeModal()" class="px-6 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 uppercase tracking-wider">Cancelar</button>
+                <button onclick="document.getElementById('lead-form').dispatchEvent(new Event('submit', {cancelable: true, bubbles: true}))" class="bg-blue-600 text-white px-8 py-2 rounded text-xs font-black uppercase tracking-wider shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition transform hover:-translate-y-0.5">Salvar Dados</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURAÇÃO INICIAL (BASE ZERADA) ---
+        // Alterei a chave para v7 para garantir que comece limpo
+        let leads = JSON.parse(localStorage.getItem('3s_leads_v7')) || [];
+
+        // --- MAPA DE COLUNAS (HEADER MAP) ---
+        // Define a ordem e as chaves exatas para exportação/importação
+        const COLUMNS = [
+            { key: 'empresa', label: 'Lead_Empresa' },
+            { key: 'categoria', label: 'Categoria' },
+            { key: 'setor', label: 'Setor' },
+            { key: 'segmento', label: 'Segmento' },
+            { key: 'local', label: 'Local_Regiao' },
+            { key: 'responsavel', label: 'Responsavel_3S' },
+            { key: 'data_inicio', label: 'Data_Inicio' },
+            { key: 'canal', label: 'Canal_Prospeccao' },
+            { key: 'contato_nome', label: 'Nome_Contato' },
+            { key: 'contato_cargo', label: 'Cargo_Contato' },
+            { key: 'temperatura', label: 'Temperatura' },
+            { key: 'prioridade', label: 'Prioridade' },
+            { key: 'status', label: 'Status_Atual' },
+            { key: 'data_previsao', label: 'Data_Prevista_Retorno' },
+            { key: 'data_real_retorno', label: 'Data_Real_Retorno' },
+            { key: 'resultado', label: 'Resultado' },
+            { key: 'motivo', label: 'Motivo_Desfecho' }
+        ];
+
+        function switchTab(tab) {
+            document.getElementById('view-dash').classList.toggle('hidden', tab !== 'dash');
+            document.getElementById('view-list').classList.toggle('hidden', tab !== 'list');
+            
+            // Estilos do menu
+            document.getElementById('nav-dash').classList.toggle('bg-blue-600', tab === 'dash');
+            document.getElementById('nav-dash').classList.toggle('text-white', tab === 'dash');
+            document.getElementById('nav-list').classList.toggle('bg-blue-600', tab === 'list');
+            document.getElementById('nav-list').classList.toggle('text-white', tab === 'list');
+            
+            document.getElementById('tab-title').innerText = tab === 'dash' ? 'Dashboard Estratégico' : 'Base de Dados Completa';
+            
+            if(tab === 'list') {
+                renderTable();
+            }
+            lucide.createIcons();
+        }
+
+        function openModal(editId = null) {
+            const form = document.getElementById('lead-form');
+            form.reset();
+            document.getElementById('lead-id').value = '';
+            document.getElementById('modal-title').innerText = 'CADASTRAR NOVO LEAD';
+
+            if (editId) {
+                const lead = leads.find(l => l.id == editId);
+                if (lead) {
+                    document.getElementById('lead-id').value = lead.id;
+                    // Preenche todos os campos mapeados
+                    COLUMNS.forEach(col => {
+                        const input = document.getElementById(`f-${col.key}`);
+                        if(input) input.value = lead[col.key] || '';
+                    });
+                    document.getElementById('modal-title').innerText = `EDITAR: ${lead.empresa}`;
+                }
+            }
+            document.getElementById('modal-lead').classList.remove('hidden');
+        }
+
+        function closeModal() { document.getElementById('modal-lead').classList.add('hidden'); }
+
+        document.getElementById('lead-form').onsubmit = function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+            const id = data.id;
+
+            if (id) {
+                const index = leads.findIndex(l => l.id == id);
+                if (index !== -1) leads[index] = { ...leads[index], ...data };
+            } else {
+                leads.push({ id: Date.now(), ...data });
+            }
+
+            saveAndRender();
+            this.reset();
+            closeModal();
+        };
+
+        function deleteLead(id) {
+            if(confirm('Tem certeza que deseja excluir este registro?')) {
+                leads = leads.filter(l => l.id !== id);
+                saveAndRender();
+            }
+        }
+
+        function resetData() {
+            if(confirm('ATENÇÃO: Isso apagará TODOS os dados do sistema. Deseja continuar?')) {
+                localStorage.removeItem('3s_leads_v7');
+                location.reload();
+            }
+        }
+
+        function saveAndRender() {
+            localStorage.setItem('3s_leads_v7', JSON.stringify(leads));
+            renderStats();
+            if(!document.getElementById('view-list').classList.contains('hidden')) renderTable();
+            lucide.createIcons();
+        }
+
+        function renderStats() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('stat-total').innerText = leads.length;
+            document.getElementById('stat-calls').innerText = leads.filter(l => l.status === 'Call Agendada').length;
+            document.getElementById('stat-waiting').innerText = leads.filter(l => l.status === 'Aguardando Retorno').length;
+            
+            // Cálculo de Atrasados
+            const late = leads.filter(l => {
+                if(l.status === 'Call Agendada' || l.status === 'Negativa') return false;
+                if(!l.data_previsao) return false;
+                return l.data_previsao < today;
+            }).length;
+            document.getElementById('stat-late').innerText = late;
+
+            // Gráfico Temp
+            const tMap = { Quente: 0, Morno: 0, Frio: 0 };
+            leads.forEach(l => { 
+                const t = l.temperatura || 'Frio'; 
+                if(tMap[t] !== undefined) tMap[t]++; else tMap['Frio']++;
+            });
+            document.getElementById('chart-temp').innerHTML = Object.entries(tMap).map(([k, v]) => {
+                const p = leads.length ? (v/leads.length*100) : 0;
+                const color = k === 'Quente' ? 'bg-red-500' : k === 'Morno' ? 'bg-orange-500' : 'bg-blue-500';
+                return `<div class="space-y-1"><div class="flex justify-between text-[10px] font-black uppercase text-slate-600"><span>${k}</span><span>${v}</span></div><div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden"><div class="h-full ${color}" style="width:${p}%"></div></div></div>`;
+            }).join('');
+
+            // Gráfico Região
+            const rMap = {};
+            leads.forEach(l => { const loc = l.local || 'N/A'; rMap[loc] = (rMap[loc] || 0) + 1; });
+            document.getElementById('chart-region').innerHTML = Object.entries(rMap).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([k, v]) => {
+                const p = leads.length ? (v/leads.length*100) : 0;
+                return `<div class="space-y-1"><div class="flex justify-between text-[10px] font-black uppercase text-slate-600"><span>${k}</span><span>${v}</span></div><div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-slate-800" style="width:${p}%"></div></div></div>`;
+            }).join('');
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('leads-table-body');
+            const term = document.getElementById('global-search').value.toLowerCase().trim();
+            const today = new Date().toISOString().split('T')[0];
+
+            let filtered = leads;
+            if(term) {
+                 // Pesquisa Exata (Case Insensitive) conforme solicitado
+                filtered = leads.filter(l => Object.values(l).some(val => String(val).toLowerCase().trim() === term));
+            }
+
+            // Ordenar por prioridade (Alta primeiro) e depois Data Prevista
+            filtered.sort((a,b) => {
+               const pMap = { 'Alta': 3, 'Média': 2, 'Baixa': 1 };
+               const pA = pMap[a.prioridade] || 0;
+               const pB = pMap[b.prioridade] || 0;
+               if (pA !== pB) return pB - pA;
+               return (a.data_previsao || '9999').localeCompare(b.data_previsao || '9999');
+            });
+
+            document.getElementById('table-count').innerText = `${filtered.length} Registros`;
+            
+            if(filtered.length === 0) {
+                document.getElementById('empty-state').classList.remove('hidden');
+                tbody.innerHTML = '';
+                return;
+            }
+            document.getElementById('empty-state').classList.add('hidden');
+
+            tbody.innerHTML = filtered.map((l, index) => {
+                const late = l.data_previsao && l.data_previsao < today && l.status !== 'Call Agendada' && l.status !== 'Negativa';
+                const rowClass = late ? 'bg-red-50/50' : '';
+                
+                // Formatação das células (Todas as 17 colunas)
+                let cells = `<td class="table-cell-dense text-center font-bold text-slate-300 border-r border-slate-100 sticky left-0 bg-white z-10 flex gap-1 justify-center items-center h-full">
+                                <button onclick="openModal(${l.id})" class="hover:text-blue-600"><i data-lucide="edit-2" class="w-3 h-3"></i></button>
+                                <button onclick="deleteLead(${l.id})" class="hover:text-red-600"><i data-lucide="trash" class="w-3 h-3"></i></button>
+                             </td>`;
+                
+                COLUMNS.forEach(col => {
+                    let val = l[col.key] || '-';
+                    let style = 'text-slate-600';
+                    
+                    if(col.key === 'empresa') style = 'font-bold text-slate-800 uppercase';
+                    if(col.key === 'status') style = 'font-bold text-blue-600 uppercase text-[9px] bg-blue-50 px-1 rounded';
+                    if(col.key === 'prioridade' && val === 'Alta') style = 'font-black text-red-600 uppercase';
+                    if(col.key === 'data_previsao' && late) style = 'font-bold text-red-500 animate-pulse';
+
+                    // Formata data se for campo de data
+                    if(col.key.includes('data') && val !== '-') {
+                        try { val = new Date(val + 'T12:00:00').toLocaleDateString('pt-BR'); } catch(e){}
+                    }
+
+                    cells += `<td class="table-cell-dense ${style} border-r border-slate-50">${val}</td>`;
+                });
+
+                return `<tr class="hover:bg-blue-50/30 transition-colors ${rowClass}">${cells}</tr>`;
+            }).join('');
+            
+            lucide.createIcons();
+        }
+
+        // --- IMPORTAÇÃO INTELIGENTE (17 COLUNAS) ---
+        function importCSV(input) {
+            const file = input.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const rows = text.split('\n');
+                if (rows.length < 2) return alert("Arquivo vazio.");
+
+                // Detecta separador e cabeçalhos
+                const firstLine = rows[0].trim();
+                const separator = firstLine.includes(';') ? ';' : ','; // Prioriza ponto e vírgula
+                const headers = firstLine.split(separator).map(h => h.trim().replace(/"/g, ''));
+
+                // Mapeia colunas do CSV para chaves internas
+                const mapIdx = {};
+                COLUMNS.forEach(col => {
+                    mapIdx[col.key] = headers.findIndex(h => h.toLowerCase() === col.label.toLowerCase());
+                });
+
+                if (mapIdx.empresa === -1) return alert(`Erro: Coluna '${COLUMNS[0].label}' não encontrada. Verifique o cabeçalho.`);
+
+                let count = 0;
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i].trim();
+                    if (!row) continue;
+                    
+                    // Separa colunas (simples)
+                    const cols = row.split(separator).map(c => c.replace(/"/g, '').trim());
+                    
+                    if (cols[mapIdx.empresa]) {
+                        const newLead = { id: Date.now() + Math.random() };
+                        COLUMNS.forEach(col => {
+                            if (mapIdx[col.key] > -1) {
+                                newLead[col.key] = cols[mapIdx[col.key]] || '';
+                            }
+                        });
+                        // Defaults importantes
+                        if(!newLead.status) newLead.status = 'Mapeado';
+                        if(!newLead.temperatura) newLead.temperatura = 'Frio';
+
+                        leads.push(newLead);
+                        count++;
+                    }
+                }
+                saveAndRender();
+                alert(`${count} leads importados!`);
+            };
+            reader.readAsText(file);
+        }
+
+        // --- EXPORTAÇÃO EXATA (17 COLUNAS) ---
+        function exportCSV() {
+            if (!leads.length) return alert('Sem dados.');
+            
+            // Cabeçalho exato pedido
+            const headerRow = COLUMNS.map(c => c.label).join(';');
+            
+            // Linhas de dados
+            const dataRows = leads.map(l => {
+                return COLUMNS.map(col => {
+                    let val = l[col.key] || '';
+                    return `"${val}"`; // Aspas para proteger o conteúdo
+                }).join(';');
+            }).join('\n');
+
+            const csvContent = "\uFEFF" + headerRow + "\n" + dataRows; // BOM para Excel abrir acentos
+            const link = document.createElement("a");
+            link.href = "data:text/csv;charset=utf-8," + encodeURI(csvContent);
+            link.download = "base_3s_strategy_completa.csv";
+            link.click();
+        }
+
+        // Init
+        window.onload = () => {
+            document.getElementById('date-now').innerText = new Date().toLocaleDateString('pt-BR');
+            renderStats();
+            renderTable();
+        };
+    </script>
+</body>
+</html>
