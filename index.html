@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+YPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3S Strategy - CRM & Dashboard</title>
+    <title>Pipeline de Vendas - CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -14,9 +14,10 @@
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
-        /* Estilo para tabela densa */
         .table-cell-dense { padding: 0.5rem 0.75rem; white-space: nowrap; font-size: 0.7rem; border-bottom: 1px solid #f1f5f9; }
-        .table-header { background-color: #f8fafc; color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 0.65rem; padding: 0.75rem; white-space: nowrap; border-bottom: 2px solid #e2e8f0; }
+        .table-header { background-color: #f8fafc; color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 0.65rem; padding: 0.5rem 0.75rem; white-space: nowrap; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+        .filter-input { width: 100%; font-size: 0.65rem; padding: 2px 4px; border: 1px solid #e2e8f0; border-radius: 4px; margin-top: 4px; color: #334155; outline: none; }
+        .filter-input:focus { border-color: #3b82f6; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900">
@@ -25,8 +26,15 @@
         <!-- Sidebar -->
         <aside class="w-64 bg-slate-900 text-white p-6 flex flex-col hidden md:flex transition-all duration-300 shadow-xl z-20">
             <div class="flex items-center gap-3 mb-10">
-                <div class="bg-blue-600 p-2 rounded-lg font-bold text-xl shadow-lg shadow-blue-500/20">3S</div>
-                <span class="font-bold tracking-tight text-lg">Strategy</span>
+                <!-- https://github.com/yasmim-3S/3s-assets/blob/6f52f72d5c51c8f40a679a4dd42ce531d1f22eb1/assets/imagens/Prancheta%2014.png (SIDEBAR) -->
+                <div class="h-10 w-10 rounded-lg bg-white flex items-center justify-center shadow-lg shadow-blue-500/20 overflow-hidden shrink-0">
+                    <!-- Substitua o src abaixo pelo link da sua logo -->
+                    <img src="https://placehold.co/100x100/2563eb/ffffff?text=3S" alt="Logo 3S" class="w-full h-full object-cover">
+                </div>
+                <div class="flex flex-col">
+                    <span class="font-bold tracking-tight text-lg leading-none">Pipeline</span>
+                    <span class="font-light text-xs opacity-70">de Vendas</span>
+                </div>
             </div>
             
             <nav class="space-y-2 flex-1">
@@ -59,10 +67,13 @@
         <main class="flex-1 flex flex-col h-screen overflow-hidden bg-white">
             <!-- Header -->
             <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0 shadow-sm z-10">
-                <h2 id="tab-title" class="font-black text-slate-800 uppercase tracking-widest text-sm italic">Dashboard Estratégico</h2>
+                <h2 id="tab-title" class="font-black text-slate-800 uppercase tracking-widest text-sm italic">Resumo Geral</h2>
                 <div class="flex items-center gap-4">
                     <span id="date-now" class="text-[10px] text-slate-500 font-bold uppercase tracking-widest hidden sm:block"></span>
-                    <div class="h-8 w-8 rounded-full bg-slate-900 flex items-center justify-center text-[10px] font-bold text-white shadow-md">3S</div>
+                    <!-- LOGO AQUI (HEADER) -->
+                    <div class="h-8 w-8 rounded-full bg-slate-900 flex items-center justify-center text-[10px] font-bold text-white shadow-md overflow-hidden border border-slate-200">
+                         <img src="https://placehold.co/100x100/0f172a/ffffff?text=3S" alt="Logo" class="w-full h-full object-cover">
+                    </div>
                 </div>
             </header>
 
@@ -71,25 +82,99 @@
                 
                 <!-- DASHBOARD VIEW -->
                 <div id="view-dash" class="space-y-8 animate-in fade-in duration-500">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-                        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-blue-600 hover:shadow-md transition">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Total de Leads</p>
-                            <h3 id="stat-total" class="text-3xl font-black italic text-slate-800">0</h3>
-                        </div>
-                        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-green-500 hover:shadow-md transition">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Calls Agendadas</p>
-                            <h3 id="stat-calls" class="text-3xl font-black text-green-600 italic">0</h3>
-                        </div>
-                        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-orange-500 hover:shadow-md transition">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Em Aberto</p>
-                            <h3 id="stat-waiting" class="text-3xl font-black text-orange-500 italic">0</h3>
-                        </div>
-                        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-red-600 hover:shadow-md transition">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Atrasados (SLA)</p>
-                            <h3 id="stat-late" class="text-3xl font-black text-red-600 italic">0</h3>
+                    
+                    <!-- KPI Grid Geral -->
+                    <div>
+                        <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Visão Global da Empresa
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-blue-600 hover:shadow-md transition">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Total de Leads</p>
+                                <h3 id="stat-total" class="text-3xl font-black italic text-slate-800">0</h3>
+                            </div>
+                            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-green-500 hover:shadow-md transition">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Calls Agendadas</p>
+                                <h3 id="stat-calls" class="text-3xl font-black text-green-600 italic">0</h3>
+                            </div>
+                            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-orange-500 hover:shadow-md transition">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Em Aberto</p>
+                                <h3 id="stat-waiting" class="text-3xl font-black text-orange-500 italic">0</h3>
+                            </div>
+                            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-red-600 hover:shadow-md transition">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Atrasados (SLA)</p>
+                                <h3 id="stat-late" class="text-3xl font-black text-red-600 italic">0</h3>
+                            </div>
                         </div>
                     </div>
 
+                    <!-- Mini Dashboards Individuais -->
+                    <div>
+                        <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <i data-lucide="users" class="w-4 h-4"></i> Performance por SDR
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            
+                            <!-- Card Yasmim -->
+                            <div class="bg-white rounded-2xl border border-pink-100 shadow-sm overflow-hidden">
+                                <div class="bg-pink-50/50 p-4 border-b border-pink-100 flex justify-between items-center">
+                                    <div class="flex items-center gap-3">
+                                        <div class="h-8 w-8 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center font-bold text-xs border border-pink-200">Y</div>
+                                        <div>
+                                            <h4 class="font-bold text-slate-800 text-sm">Leads Yasmim</h4>
+                                            <p class="text-[10px] text-slate-500 uppercase font-semibold">Responsável 3S</p>
+                                        </div>
+                                    </div>
+                                    <span id="yas-total" class="text-xs font-black bg-white px-2 py-1 rounded-full text-slate-600 border border-slate-100">0 Leads</span>
+                                </div>
+                                <div class="p-6 grid grid-cols-3 gap-4 text-center">
+                                    <div class="space-y-1">
+                                        <p class="text-[9px] uppercase font-bold text-slate-400">Calls</p>
+                                        <p id="yas-calls" class="text-xl font-black text-green-600">0</p>
+                                    </div>
+                                    <div class="space-y-1 border-x border-slate-50">
+                                        <p class="text-[9px] uppercase font-bold text-slate-400">Em Aberto</p>
+                                        <p id="yas-open" class="text-xl font-black text-orange-500">0</p>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <p class="text-[9px] uppercase font-bold text-slate-400">Atrasados</p>
+                                        <p id="yas-late" class="text-xl font-black text-red-500">0</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Card Saul -->
+                            <div class="bg-white rounded-2xl border border-indigo-100 shadow-sm overflow-hidden">
+                                <div class="bg-indigo-50/50 p-4 border-b border-indigo-100 flex justify-between items-center">
+                                    <div class="flex items-center gap-3">
+                                        <div class="h-8 w-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs border border-indigo-200">S</div>
+                                        <div>
+                                            <h4 class="font-bold text-slate-800 text-sm">Leads Saul</h4>
+                                            <p class="text-[10px] text-slate-500 uppercase font-semibold">Responsável 3S</p>
+                                        </div>
+                                    </div>
+                                    <span id="saul-total" class="text-xs font-black bg-white px-2 py-1 rounded-full text-slate-600 border border-slate-100">0 Leads</span>
+                                </div>
+                                <div class="p-6 grid grid-cols-3 gap-4 text-center">
+                                    <div class="space-y-1">
+                                        <p class="text-[9px] uppercase font-bold text-slate-400">Calls</p>
+                                        <p id="saul-calls" class="text-xl font-black text-green-600">0</p>
+                                    </div>
+                                    <div class="space-y-1 border-x border-slate-50">
+                                        <p class="text-[9px] uppercase font-bold text-slate-400">Em Aberto</p>
+                                        <p id="saul-open" class="text-xl font-black text-orange-500">0</p>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <p class="text-[9px] uppercase font-bold text-slate-400">Atrasados</p>
+                                        <p id="saul-late" class="text-xl font-black text-red-500">0</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Gráficos Gerais -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                             <h4 class="font-bold text-xs uppercase tracking-widest mb-6 flex items-center gap-2 text-slate-700">
@@ -109,7 +194,7 @@
                 <!-- LIST VIEW (FULL TABLE) -->
                 <div id="view-list" class="hidden animate-in slide-in-from-bottom-4 duration-500 flex flex-col gap-6">
                     
-                    <!-- Filtros Rápidos -->
+                    <!-- Resumo Tabela -->
                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap gap-4 items-center justify-between">
                          <div class="flex items-center gap-2">
                              <div class="bg-blue-50 p-2 rounded-lg text-blue-600">
@@ -121,7 +206,7 @@
                              </div>
                          </div>
                          <div class="flex gap-2">
-                             <!-- INPUT DE BUSCA ATUALIZADO PARA EXATA -->
+                             <!-- Busca Exata -->
                              <input type="text" id="global-search" onkeyup="renderTable()" placeholder="Busca Exata (Ex: Ticket Sports)..." class="border border-slate-200 rounded-lg px-3 py-2 text-xs w-64 outline-blue-600 font-medium">
                          </div>
                     </div>
@@ -130,27 +215,8 @@
                     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex-1">
                         <div class="overflow-x-auto custom-scroll" style="max-height: 70vh;">
                             <table class="w-full text-left border-collapse">
-                                <thead class="sticky top-0 z-10 shadow-sm">
-                                    <tr>
-                                        <th class="table-header w-10 text-center">#</th>
-                                        <th class="table-header min-w-[200px]">Lead_Empresa</th>
-                                        <th class="table-header min-w-[120px]">Categoria</th>
-                                        <th class="table-header min-w-[120px]">Setor</th>
-                                        <th class="table-header min-w-[120px]">Segmento</th>
-                                        <th class="table-header min-w-[150px]">Local_Regiao</th>
-                                        <th class="table-header min-w-[150px]">Responsavel_3S</th>
-                                        <th class="table-header min-w-[100px]">Data_Inicio</th>
-                                        <th class="table-header min-w-[120px]">Canal_Prospeccao</th>
-                                        <th class="table-header min-w-[150px]">Nome_Contato</th>
-                                        <th class="table-header min-w-[150px]">Cargo_Contato</th>
-                                        <th class="table-header min-w-[100px]">Temperatura</th>
-                                        <th class="table-header min-w-[100px]">Prioridade</th>
-                                        <th class="table-header min-w-[120px]">Status_Atual</th>
-                                        <th class="table-header min-w-[120px]">Data_Prevista</th>
-                                        <th class="table-header min-w-[120px]">Data_Real_Retorno</th>
-                                        <th class="table-header min-w-[120px]">Resultado</th>
-                                        <th class="table-header min-w-[200px]">Motivo_Desfecho</th>
-                                    </tr>
+                                <thead class="sticky top-0 z-10 shadow-sm" id="table-head-container">
+                                    <!-- Cabeçalhos e Filtros gerados via JS -->
                                 </thead>
                                 <tbody id="leads-table-body" class="bg-white"></tbody>
                             </table>
@@ -160,7 +226,7 @@
                                 <div class="bg-slate-50 p-4 rounded-full">
                                     <i data-lucide="file-spreadsheet" class="w-8 h-8 opacity-40"></i>
                                 </div>
-                                <p>A base está vazia. <br>Utilize o menu lateral para <b>Importar CSV</b>.</p>
+                                <p>Nenhum registro encontrado.</p>
                             </div>
                         </div>
                     </div>
@@ -169,7 +235,7 @@
         </main>
     </div>
 
-    <!-- MODAL FORMULARIO COMPLETO -->
+    <!-- MODAL FORMULARIO -->
     <div id="modal-lead" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4 transition-all">
         <div class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden border border-slate-700 flex flex-col max-h-[90vh]">
             <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
@@ -233,7 +299,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div class="space-y-1 md:col-span-2">
                             <label class="text-[10px] font-bold text-slate-500 uppercase">Responsavel_3S</label>
-                            <input name="responsavel" id="f-responsavel" type="text" class="w-full border border-slate-200 rounded px-3 py-2 text-xs outline-blue-600">
+                            <input name="responsavel" id="f-responsavel" type="text" class="w-full border border-slate-200 rounded px-3 py-2 text-xs outline-blue-600" placeholder="Ex: Yasmim ou Saul">
                         </div>
                         <div class="space-y-1">
                             <label class="text-[10px] font-bold text-slate-500 uppercase">Data_Inicio</label>
@@ -322,50 +388,267 @@
     </div>
 
     <script>
-        // --- CONFIGURAÇÃO INICIAL (BASE ZERADA) ---
-        // Alterei a chave para v7 para garantir que comece limpo
-        let leads = JSON.parse(localStorage.getItem('3s_leads_v7')) || [];
+        // --- CONFIGURAÇÃO INICIAL ---
+        let leads = JSON.parse(localStorage.getItem('3s_leads_v8')) || [];
+        let activeFilters = {};
 
-        // --- MAPA DE COLUNAS (HEADER MAP) ---
-        // Define a ordem e as chaves exatas para exportação/importação
+        // --- MAPA DE COLUNAS ---
         const COLUMNS = [
-            { key: 'empresa', label: 'Lead_Empresa' },
-            { key: 'categoria', label: 'Categoria' },
-            { key: 'setor', label: 'Setor' },
-            { key: 'segmento', label: 'Segmento' },
-            { key: 'local', label: 'Local_Regiao' },
-            { key: 'responsavel', label: 'Responsavel_3S' },
-            { key: 'data_inicio', label: 'Data_Inicio' },
-            { key: 'canal', label: 'Canal_Prospeccao' },
-            { key: 'contato_nome', label: 'Nome_Contato' },
-            { key: 'contato_cargo', label: 'Cargo_Contato' },
-            { key: 'temperatura', label: 'Temperatura' },
-            { key: 'prioridade', label: 'Prioridade' },
-            { key: 'status', label: 'Status_Atual' },
-            { key: 'data_previsao', label: 'Data_Prevista_Retorno' },
-            { key: 'data_real_retorno', label: 'Data_Real_Retorno' },
-            { key: 'resultado', label: 'Resultado' },
-            { key: 'motivo', label: 'Motivo_Desfecho' }
+            { key: 'empresa', label: 'Lead_Empresa', type: 'text' },
+            { key: 'categoria', label: 'Categoria', type: 'select' },
+            { key: 'setor', label: 'Setor', type: 'select' },
+            { key: 'segmento', label: 'Segmento', type: 'select' },
+            { key: 'local', label: 'Local_Regiao', type: 'select' },
+            { key: 'responsavel', label: 'Responsavel_3S', type: 'select' },
+            { key: 'data_inicio', label: 'Data_Inicio', type: 'date' },
+            { key: 'canal', label: 'Canal_Prospeccao', type: 'select' },
+            { key: 'contato_nome', label: 'Nome_Contato', type: 'text' },
+            { key: 'contato_cargo', label: 'Cargo_Contato', type: 'text' },
+            { key: 'temperatura', label: 'Temperatura', type: 'select' },
+            { key: 'prioridade', label: 'Prioridade', type: 'select' },
+            { key: 'status', label: 'Status_Atual', type: 'select' },
+            { key: 'data_previsao', label: 'Data_Prevista_Retorno', type: 'date' },
+            { key: 'data_real_retorno', label: 'Data_Real_Retorno', type: 'date' },
+            { key: 'resultado', label: 'Resultado', type: 'text' },
+            { key: 'motivo', label: 'Motivo_Desfecho', type: 'text' }
         ];
 
         function switchTab(tab) {
             document.getElementById('view-dash').classList.toggle('hidden', tab !== 'dash');
             document.getElementById('view-list').classList.toggle('hidden', tab !== 'list');
             
-            // Estilos do menu
             document.getElementById('nav-dash').classList.toggle('bg-blue-600', tab === 'dash');
             document.getElementById('nav-dash').classList.toggle('text-white', tab === 'dash');
             document.getElementById('nav-list').classList.toggle('bg-blue-600', tab === 'list');
             document.getElementById('nav-list').classList.toggle('text-white', tab === 'list');
             
-            document.getElementById('tab-title').innerText = tab === 'dash' ? 'Dashboard Estratégico' : 'Base de Dados Completa';
-            
             if(tab === 'list') {
+                renderHeader();
                 renderTable();
             }
             lucide.createIcons();
         }
 
+        // --- RENDER STATS (GERAL + YASMIM + SAUL) ---
+        function renderStats() {
+            const today = new Date().toISOString().split('T')[0];
+            
+            // 1. STATS GERAIS
+            document.getElementById('stat-total').innerText = leads.length;
+            document.getElementById('stat-calls').innerText = leads.filter(l => l.status === 'Call Agendada').length;
+            document.getElementById('stat-waiting').innerText = leads.filter(l => l.status === 'Aguardando Retorno').length;
+            
+            const countLate = (list) => list.filter(l => {
+                if(l.status === 'Call Agendada' || l.status === 'Negativa') return false;
+                if(!l.data_previsao) return false;
+                return l.data_previsao < today;
+            }).length;
+
+            document.getElementById('stat-late').innerText = countLate(leads);
+
+            // 2. STATS INDIVIDUAIS (YASMIM E SAUL)
+            const calcUserStats = (name) => {
+                // Filtra por nome (case insensitive include)
+                const userLeads = leads.filter(l => (l.responsavel || '').toLowerCase().includes(name.toLowerCase()));
+                return {
+                    total: userLeads.length,
+                    calls: userLeads.filter(l => l.status === 'Call Agendada').length,
+                    open: userLeads.filter(l => l.status === 'Aguardando Retorno' || l.status === 'Prospecção Ativa').length,
+                    late: countLate(userLeads)
+                };
+            };
+
+            const yasmim = calcUserStats('Yasmim');
+            document.getElementById('yas-total').innerText = `${yasmim.total} Leads`;
+            document.getElementById('yas-calls').innerText = yasmim.calls;
+            document.getElementById('yas-open').innerText = yasmim.open;
+            document.getElementById('yas-late').innerText = yasmim.late;
+
+            const saul = calcUserStats('Saul');
+            document.getElementById('saul-total').innerText = `${saul.total} Leads`;
+            document.getElementById('saul-calls').innerText = saul.calls;
+            document.getElementById('saul-open').innerText = saul.open;
+            document.getElementById('saul-late').innerText = saul.late;
+
+
+            // 3. GRÁFICOS
+            const tMap = { Quente: 0, Morno: 0, Frio: 0 };
+            leads.forEach(l => { 
+                const t = l.temperatura || 'Frio'; 
+                if(tMap[t] !== undefined) tMap[t]++; else tMap['Frio']++;
+            });
+            document.getElementById('chart-temp').innerHTML = Object.entries(tMap).map(([k, v]) => {
+                const p = leads.length ? (v/leads.length*100) : 0;
+                const color = k === 'Quente' ? 'bg-red-500' : k === 'Morno' ? 'bg-orange-500' : 'bg-blue-500';
+                return `<div class="space-y-1"><div class="flex justify-between text-[10px] font-black uppercase text-slate-600"><span>${k}</span><span>${v}</span></div><div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden"><div class="h-full ${color}" style="width:${p}%"></div></div></div>`;
+            }).join('');
+
+            const rMap = {};
+            leads.forEach(l => { const loc = l.local || 'N/A'; rMap[loc] = (rMap[loc] || 0) + 1; });
+            document.getElementById('chart-region').innerHTML = Object.entries(rMap).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([k, v]) => {
+                const p = leads.length ? (v/leads.length*100) : 0;
+                return `<div class="space-y-1"><div class="flex justify-between text-[10px] font-black uppercase text-slate-600"><span>${k}</span><span>${v}</span></div><div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-slate-800" style="width:${p}%"></div></div></div>`;
+            }).join('');
+        }
+
+        // --- FUNÇÕES DA TABELA E FILTROS ---
+        function renderHeader() {
+            const thead = document.getElementById('table-head-container');
+            thead.innerHTML = '';
+
+            const actionsTh = document.createElement('th');
+            actionsTh.className = 'table-header w-10 text-center sticky left-0 z-20';
+            actionsTh.style.backgroundColor = '#f8fafc';
+            actionsTh.innerHTML = '<div>#</div>';
+            
+            const clearBtn = document.createElement('button');
+            clearBtn.innerHTML = '<i data-lucide="filter-x" class="w-3 h-3 text-red-400"></i>';
+            clearBtn.title = "Limpar Filtros";
+            clearBtn.onclick = clearAllFilters;
+            clearBtn.className = "mt-2";
+            actionsTh.appendChild(clearBtn);
+
+            const tr = document.createElement('tr');
+            tr.appendChild(actionsTh);
+
+            COLUMNS.forEach(col => {
+                const th = document.createElement('th');
+                th.className = 'table-header';
+                
+                const titleDiv = document.createElement('div');
+                titleDiv.innerText = col.label;
+                th.appendChild(titleDiv);
+
+                let filterInput;
+                if (col.type === 'select') {
+                    filterInput = document.createElement('select');
+                    filterInput.className = 'filter-input bg-white';
+                    const defaultOpt = document.createElement('option');
+                    defaultOpt.value = '';
+                    defaultOpt.innerText = 'Todos';
+                    filterInput.appendChild(defaultOpt);
+
+                    const uniqueValues = [...new Set(leads.map(l => l[col.key]).filter(v => v))].sort();
+                    uniqueValues.forEach(val => {
+                        const opt = document.createElement('option');
+                        opt.value = val;
+                        opt.innerText = val;
+                        filterInput.appendChild(opt);
+                    });
+                } else if (col.type === 'date') {
+                    filterInput = document.createElement('input');
+                    filterInput.type = 'date';
+                    filterInput.className = 'filter-input';
+                } else {
+                    filterInput = document.createElement('input');
+                    filterInput.type = 'text';
+                    filterInput.placeholder = 'Filtrar...';
+                    filterInput.className = 'filter-input';
+                }
+
+                if (activeFilters[col.key]) {
+                    filterInput.value = activeFilters[col.key];
+                    filterInput.classList.add('border-blue-500', 'bg-blue-50');
+                }
+
+                filterInput.onchange = (e) => {
+                    const val = e.target.value.toLowerCase();
+                    if (val) activeFilters[col.key] = val;
+                    else delete activeFilters[col.key];
+                    renderHeader(); 
+                    renderTable();
+                };
+                if (col.type === 'text') {
+                    filterInput.onkeyup = (e) => {
+                         const val = e.target.value.toLowerCase();
+                        if (val) activeFilters[col.key] = val;
+                        else delete activeFilters[col.key];
+                        renderTable();
+                    };
+                }
+
+                th.appendChild(filterInput);
+                tr.appendChild(th);
+            });
+
+            thead.appendChild(tr);
+            lucide.createIcons();
+        }
+
+        function clearAllFilters() {
+            activeFilters = {};
+            renderHeader();
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('leads-table-body');
+            const term = document.getElementById('global-search').value.toLowerCase().trim();
+            const today = new Date().toISOString().split('T')[0];
+
+            let filtered = leads.filter(l => {
+                // Filtro Global Exato
+                if (term) {
+                     const match = Object.values(l).some(val => String(val).toLowerCase().trim() === term);
+                     if (!match) return false;
+                }
+                // Filtros de Coluna
+                return Object.keys(activeFilters).every(key => {
+                    const filterVal = activeFilters[key];
+                    const leadVal = String(l[key] || '').toLowerCase();
+                    return leadVal.includes(filterVal); 
+                });
+            });
+
+            filtered.sort((a,b) => {
+               const pMap = { 'Alta': 3, 'Média': 2, 'Baixa': 1 };
+               const pA = pMap[a.prioridade] || 0;
+               const pB = pMap[b.prioridade] || 0;
+               if (pA !== pB) return pB - pA;
+               return (a.data_previsao || '9999').localeCompare(b.data_previsao || '9999');
+            });
+
+            document.getElementById('table-count').innerText = `${filtered.length} Registros`;
+            
+            if(filtered.length === 0) {
+                document.getElementById('empty-state').classList.remove('hidden');
+                tbody.innerHTML = '';
+                return;
+            }
+            document.getElementById('empty-state').classList.add('hidden');
+
+            tbody.innerHTML = filtered.map((l) => {
+                const late = l.data_previsao && l.data_previsao < today && l.status !== 'Call Agendada' && l.status !== 'Negativa';
+                const rowClass = late ? 'bg-red-50/50' : '';
+                
+                let cells = `<td class="table-cell-dense text-center font-bold text-slate-300 border-r border-slate-100 sticky left-0 bg-white z-10 flex gap-1 justify-center items-center h-full">
+                                <button onclick="openModal(${l.id})" class="hover:text-blue-600"><i data-lucide="edit-2" class="w-3 h-3"></i></button>
+                                <button onclick="deleteLead(${l.id})" class="hover:text-red-600"><i data-lucide="trash" class="w-3 h-3"></i></button>
+                             </td>`;
+                
+                COLUMNS.forEach(col => {
+                    let val = l[col.key] || '-';
+                    let style = 'text-slate-600';
+                    
+                    if(col.key === 'empresa') style = 'font-bold text-slate-800 uppercase';
+                    if(col.key === 'status') style = 'font-bold text-blue-600 uppercase text-[9px] bg-blue-50 px-1 rounded';
+                    if(col.key === 'prioridade' && val === 'Alta') style = 'font-black text-red-600 uppercase';
+                    if(col.key === 'data_previsao' && late) style = 'font-bold text-red-500 animate-pulse';
+
+                    if(col.key.includes('data') && val !== '-') {
+                        try { val = new Date(val + 'T12:00:00').toLocaleDateString('pt-BR'); } catch(e){}
+                    }
+
+                    cells += `<td class="table-cell-dense ${style} border-r border-slate-50">${val}</td>`;
+                });
+
+                return `<tr class="hover:bg-blue-50/30 transition-colors ${rowClass}">${cells}</tr>`;
+            }).join('');
+            
+            lucide.createIcons();
+        }
+
+        // --- CRUD BÁSICO ---
         function openModal(editId = null) {
             const form = document.getElementById('lead-form');
             form.reset();
@@ -376,7 +659,6 @@
                 const lead = leads.find(l => l.id == editId);
                 if (lead) {
                     document.getElementById('lead-id').value = lead.id;
-                    // Preenche todos os campos mapeados
                     COLUMNS.forEach(col => {
                         const input = document.getElementById(`f-${col.key}`);
                         if(input) input.value = lead[col.key] || '';
@@ -415,117 +697,22 @@
         }
 
         function resetData() {
-            if(confirm('ATENÇÃO: Isso apagará TODOS os dados do sistema. Deseja continuar?')) {
-                localStorage.removeItem('3s_leads_v7');
+            if(confirm('ATENÇÃO: Isso apagará TODOS os dados. Deseja continuar?')) {
+                localStorage.removeItem('3s_leads_v8');
                 location.reload();
             }
         }
 
         function saveAndRender() {
-            localStorage.setItem('3s_leads_v7', JSON.stringify(leads));
+            localStorage.setItem('3s_leads_v8', JSON.stringify(leads));
             renderStats();
-            if(!document.getElementById('view-list').classList.contains('hidden')) renderTable();
+            if(!document.getElementById('view-list').classList.contains('hidden')) {
+                renderHeader();
+                renderTable();
+            }
             lucide.createIcons();
         }
 
-        function renderStats() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('stat-total').innerText = leads.length;
-            document.getElementById('stat-calls').innerText = leads.filter(l => l.status === 'Call Agendada').length;
-            document.getElementById('stat-waiting').innerText = leads.filter(l => l.status === 'Aguardando Retorno').length;
-            
-            // Cálculo de Atrasados
-            const late = leads.filter(l => {
-                if(l.status === 'Call Agendada' || l.status === 'Negativa') return false;
-                if(!l.data_previsao) return false;
-                return l.data_previsao < today;
-            }).length;
-            document.getElementById('stat-late').innerText = late;
-
-            // Gráfico Temp
-            const tMap = { Quente: 0, Morno: 0, Frio: 0 };
-            leads.forEach(l => { 
-                const t = l.temperatura || 'Frio'; 
-                if(tMap[t] !== undefined) tMap[t]++; else tMap['Frio']++;
-            });
-            document.getElementById('chart-temp').innerHTML = Object.entries(tMap).map(([k, v]) => {
-                const p = leads.length ? (v/leads.length*100) : 0;
-                const color = k === 'Quente' ? 'bg-red-500' : k === 'Morno' ? 'bg-orange-500' : 'bg-blue-500';
-                return `<div class="space-y-1"><div class="flex justify-between text-[10px] font-black uppercase text-slate-600"><span>${k}</span><span>${v}</span></div><div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden"><div class="h-full ${color}" style="width:${p}%"></div></div></div>`;
-            }).join('');
-
-            // Gráfico Região
-            const rMap = {};
-            leads.forEach(l => { const loc = l.local || 'N/A'; rMap[loc] = (rMap[loc] || 0) + 1; });
-            document.getElementById('chart-region').innerHTML = Object.entries(rMap).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([k, v]) => {
-                const p = leads.length ? (v/leads.length*100) : 0;
-                return `<div class="space-y-1"><div class="flex justify-between text-[10px] font-black uppercase text-slate-600"><span>${k}</span><span>${v}</span></div><div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-slate-800" style="width:${p}%"></div></div></div>`;
-            }).join('');
-        }
-
-        function renderTable() {
-            const tbody = document.getElementById('leads-table-body');
-            const term = document.getElementById('global-search').value.toLowerCase().trim();
-            const today = new Date().toISOString().split('T')[0];
-
-            let filtered = leads;
-            if(term) {
-                 // Pesquisa Exata (Case Insensitive) conforme solicitado
-                filtered = leads.filter(l => Object.values(l).some(val => String(val).toLowerCase().trim() === term));
-            }
-
-            // Ordenar por prioridade (Alta primeiro) e depois Data Prevista
-            filtered.sort((a,b) => {
-               const pMap = { 'Alta': 3, 'Média': 2, 'Baixa': 1 };
-               const pA = pMap[a.prioridade] || 0;
-               const pB = pMap[b.prioridade] || 0;
-               if (pA !== pB) return pB - pA;
-               return (a.data_previsao || '9999').localeCompare(b.data_previsao || '9999');
-            });
-
-            document.getElementById('table-count').innerText = `${filtered.length} Registros`;
-            
-            if(filtered.length === 0) {
-                document.getElementById('empty-state').classList.remove('hidden');
-                tbody.innerHTML = '';
-                return;
-            }
-            document.getElementById('empty-state').classList.add('hidden');
-
-            tbody.innerHTML = filtered.map((l, index) => {
-                const late = l.data_previsao && l.data_previsao < today && l.status !== 'Call Agendada' && l.status !== 'Negativa';
-                const rowClass = late ? 'bg-red-50/50' : '';
-                
-                // Formatação das células (Todas as 17 colunas)
-                let cells = `<td class="table-cell-dense text-center font-bold text-slate-300 border-r border-slate-100 sticky left-0 bg-white z-10 flex gap-1 justify-center items-center h-full">
-                                <button onclick="openModal(${l.id})" class="hover:text-blue-600"><i data-lucide="edit-2" class="w-3 h-3"></i></button>
-                                <button onclick="deleteLead(${l.id})" class="hover:text-red-600"><i data-lucide="trash" class="w-3 h-3"></i></button>
-                             </td>`;
-                
-                COLUMNS.forEach(col => {
-                    let val = l[col.key] || '-';
-                    let style = 'text-slate-600';
-                    
-                    if(col.key === 'empresa') style = 'font-bold text-slate-800 uppercase';
-                    if(col.key === 'status') style = 'font-bold text-blue-600 uppercase text-[9px] bg-blue-50 px-1 rounded';
-                    if(col.key === 'prioridade' && val === 'Alta') style = 'font-black text-red-600 uppercase';
-                    if(col.key === 'data_previsao' && late) style = 'font-bold text-red-500 animate-pulse';
-
-                    // Formata data se for campo de data
-                    if(col.key.includes('data') && val !== '-') {
-                        try { val = new Date(val + 'T12:00:00').toLocaleDateString('pt-BR'); } catch(e){}
-                    }
-
-                    cells += `<td class="table-cell-dense ${style} border-r border-slate-50">${val}</td>`;
-                });
-
-                return `<tr class="hover:bg-blue-50/30 transition-colors ${rowClass}">${cells}</tr>`;
-            }).join('');
-            
-            lucide.createIcons();
-        }
-
-        // --- IMPORTAÇÃO INTELIGENTE (17 COLUNAS) ---
         function importCSV(input) {
             const file = input.files[0];
             const reader = new FileReader();
@@ -535,27 +722,22 @@
                 const rows = text.split('\n');
                 if (rows.length < 2) return alert("Arquivo vazio.");
 
-                // Detecta separador e cabeçalhos
                 const firstLine = rows[0].trim();
-                const separator = firstLine.includes(';') ? ';' : ','; // Prioriza ponto e vírgula
+                const separator = firstLine.includes(';') ? ';' : ',';
                 const headers = firstLine.split(separator).map(h => h.trim().replace(/"/g, ''));
 
-                // Mapeia colunas do CSV para chaves internas
                 const mapIdx = {};
                 COLUMNS.forEach(col => {
                     mapIdx[col.key] = headers.findIndex(h => h.toLowerCase() === col.label.toLowerCase());
                 });
 
-                if (mapIdx.empresa === -1) return alert(`Erro: Coluna '${COLUMNS[0].label}' não encontrada. Verifique o cabeçalho.`);
+                if (mapIdx.empresa === -1) return alert(`Erro: Coluna '${COLUMNS[0].label}' não encontrada.`);
 
                 let count = 0;
                 for (let i = 1; i < rows.length; i++) {
                     const row = rows[i].trim();
                     if (!row) continue;
-                    
-                    // Separa colunas (simples)
                     const cols = row.split(separator).map(c => c.replace(/"/g, '').trim());
-                    
                     if (cols[mapIdx.empresa]) {
                         const newLead = { id: Date.now() + Math.random() };
                         COLUMNS.forEach(col => {
@@ -563,10 +745,8 @@
                                 newLead[col.key] = cols[mapIdx[col.key]] || '';
                             }
                         });
-                        // Defaults importantes
                         if(!newLead.status) newLead.status = 'Mapeado';
                         if(!newLead.temperatura) newLead.temperatura = 'Frio';
-
                         leads.push(newLead);
                         count++;
                     }
@@ -577,33 +757,25 @@
             reader.readAsText(file);
         }
 
-        // --- EXPORTAÇÃO EXATA (17 COLUNAS) ---
         function exportCSV() {
             if (!leads.length) return alert('Sem dados.');
-            
-            // Cabeçalho exato pedido
             const headerRow = COLUMNS.map(c => c.label).join(';');
-            
-            // Linhas de dados
             const dataRows = leads.map(l => {
                 return COLUMNS.map(col => {
                     let val = l[col.key] || '';
-                    return `"${val}"`; // Aspas para proteger o conteúdo
+                    return `"${val}"`;
                 }).join(';');
             }).join('\n');
-
-            const csvContent = "\uFEFF" + headerRow + "\n" + dataRows; // BOM para Excel abrir acentos
+            const csvContent = "\uFEFF" + headerRow + "\n" + dataRows;
             const link = document.createElement("a");
             link.href = "data:text/csv;charset=utf-8," + encodeURI(csvContent);
             link.download = "base_3s_strategy_completa.csv";
             link.click();
         }
 
-        // Init
         window.onload = () => {
             document.getElementById('date-now').innerText = new Date().toLocaleDateString('pt-BR');
             renderStats();
-            renderTable();
         };
     </script>
 </body>
