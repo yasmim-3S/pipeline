@@ -415,7 +415,7 @@
     <script>
         // --- CONFIGURAÇÃO DO SUPABASE ---
         const projectUrl = 'https://mypkcyjmvelpoiqiajgh.supabase.co';
-        const apiKey = 'sb_publishable_J-U1IgVJli32MDoKe51DSQ_QP58DXYX'; // Sua chave
+        const apiKey = 'sb_publishable_J-U1IgVJli32MDoKe51DSQ_QP58DXYX'; // CHAVE ATUALIZADA
         const supabase = supabase.createClient(projectUrl, apiKey);
 
         // --- ESTADO LOCAL ---
@@ -500,7 +500,25 @@
 
             } catch (err) {
                 console.error("Erro Supabase:", err);
-                setStatus('Erro de Conexão', 'error');
+                setStatus('Erro: ' + err.message, 'error');
+                
+                // Mostra erro visual na tabela se estiver vazia ou com erro
+                if(document.getElementById('view-list')) {
+                     const tbody = document.getElementById('leads-table-body');
+                     if(tbody) {
+                        tbody.innerHTML = `<tr><td colspan="100%" class="p-8 text-center">
+                            <div class="bg-red-50 border border-red-200 rounded-lg p-4 inline-block text-left">
+                                <h4 class="font-bold text-red-600 text-sm mb-2 flex items-center gap-2">
+                                    <i data-lucide="alert-triangle" class="w-4 h-4"></i> Erro de Conexão
+                                </h4>
+                                <p class="text-xs text-red-500 font-mono mb-2">${err.message}</p>
+                                <p class="text-[10px] text-slate-500">Dicas: Verifique se a API Key está correta e se a tabela 'leads' existe no Supabase.</p>
+                            </div>
+                        </td></tr>`;
+                        lucide.createIcons();
+                     }
+                }
+
                 if(err.message.includes('relation "leads" does not exist')) {
                     alert('ERRO CRÍTICO: A tabela "leads" não existe no Supabase. Por favor, crie a tabela usando o código SQL fornecido.');
                 }
