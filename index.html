@@ -27,7 +27,6 @@
         .filter-input { width: 100%; font-size: 0.65rem; padding: 2px 4px; border: 1px solid #e2e8f0; border-radius: 4px; margin-top: 4px; color: #334155; outline: none; }
         .filter-input:focus { border-color: #3b82f6; }
         
-        /* Loading Overlay */
         #loading-overlay {
             position: fixed; inset: 0; background: rgba(255,255,255,0.9); 
             z-index: 9999; display: flex; justify-content: center; align-items: center;
@@ -41,8 +40,15 @@
     <div id="loading-overlay" class="hidden">
         <div class="flex flex-col items-center gap-4">
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <p class="text-blue-600 font-bold text-sm animate-pulse">Sincronizando com Supabase...</p>
+            <p id="loading-text" class="text-blue-600 font-bold text-sm animate-pulse">Iniciando sistema...</p>
         </div>
+    </div>
+
+    <!-- Barra de Diagnóstico (Só aparece se der erro) -->
+    <div id="error-bar" class="hidden bg-red-600 text-white text-xs font-bold p-2 text-center sticky top-0 z-50">
+        <span id="error-msg">Erro de conexão</span>
+        <button onclick="location.reload()" class="ml-4 underline">Tentar Novamente</button>
+        <button onclick="openConfigModal()" class="ml-4 bg-white text-red-600 px-2 rounded">Configurar</button>
     </div>
 
     <div class="flex min-h-screen">
@@ -445,24 +451,31 @@
     </div>
 
     <script>
-        // --- CONFIGURAÇÃO INICIAL ---
-        // Tenta pegar do LocalStorage primeiro, se não usa o padrão (mesmo que errado, para permitir override)
-        const storedUrl = localStorage.getItem('crm_supabase_url');
-        const storedKey = localStorage.getItem('crm_supabase_key');
+        // --- INICIALIZAÇÃO SEGURA ---
         
-        // PADRÃO (Sua chave original)
-        const defaultUrl = 'https://mypkcyjmvelpoiqiajgh.supabase.co';
-        const defaultKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15cGtjeWptdmVscG9pcWlhamdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5ODIyMzAsImV4cCI6MjA4MzU1ODIzMH0.2wfWncWibsMH2IMcn81MrmJwWZxKqjqOf5r_fy2fmUk'; 
+        let dbClient = null;
+        const DEFAULT_URL = 'https://mypkcyjmvelpoiqiajgh.supabase.co';
+        // A chave fornecida:
+        const DEFAULT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15cGtjeWptdmVscG9pcWlhamdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5ODIyMzAsImV4cCI6MjA4MzU1ODIzMH0.2wfWncWibsMH2IMcn81MrmJwWZxKqjqOf5r_fy2fmUk';
 
-        const projectUrl = storedUrl || defaultUrl;
-        const apiKey = storedKey || defaultKey;
+        function initSupabase() {
+            try {
+                // Tenta pegar do armazenamento local
+                let url = localStorage.getItem('crm_supabase_url_v3') || DEFAULT_URL;
+                let key = localStorage.getItem('crm_supabase_key_v3') || DEFAULT_KEY;
 
-        // Inicializa o cliente
-        let supabase = null;
-        try {
-            supabase = supabase.createClient(projectUrl, apiKey);
-        } catch(e) {
-            console.error("Erro ao iniciar Supabase:", e);
+                if (!window.supabase || !window.supabase.createClient) {
+                    throw new Error("Biblioteca Supabase não carregou. Verifique sua conexão.");
+                }
+
+                dbClient = window.supabase.createClient(url, key);
+                console.log("Supabase inicializado com sucesso.");
+                return true;
+            } catch (e) {
+                console.error("Erro crítico de inicialização:", e);
+                showError("Erro ao carregar sistema: " + e.message);
+                return false;
+            }
         }
 
         // --- ESTADO LOCAL ---
@@ -490,31 +503,7 @@
             { key: 'motivo', label: 'Motivo_Desfecho', type: 'text' }
         ];
 
-        // --- CONFIGURAÇÃO MODAL ---
-        function openConfigModal() {
-            document.getElementById('conf-url').value = projectUrl;
-            document.getElementById('conf-key').value = apiKey;
-            document.getElementById('modal-config').classList.remove('hidden');
-        }
-
-        function closeConfigModal() {
-            document.getElementById('modal-config').classList.add('hidden');
-        }
-
-        document.getElementById('config-form').onsubmit = function(e) {
-            e.preventDefault();
-            const newUrl = document.getElementById('conf-url').value.trim();
-            const newKey = document.getElementById('conf-key').value.trim();
-            
-            if(newUrl && newKey) {
-                localStorage.setItem('crm_supabase_url', newUrl);
-                localStorage.setItem('crm_supabase_key', newKey);
-                alert("Configurações salvas! A página será recarregada.");
-                location.reload();
-            }
-        };
-
-        // --- FUNÇÕES DE NAVEGAÇÃO ---
+        // --- FUNÇÕES VISUAIS ---
         function switchTab(tab) {
             document.getElementById('view-dash').classList.toggle('hidden', tab !== 'dash');
             document.getElementById('view-list').classList.toggle('hidden', tab !== 'list');
@@ -540,27 +529,67 @@
             el.innerText = text;
             if(type === 'success') {
                 el.className = "bg-emerald-100 text-emerald-600 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase border border-emerald-200 cursor-pointer";
+                document.getElementById('error-bar').classList.add('hidden');
             } else if (type === 'error') {
                 el.className = "bg-red-100 text-red-600 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase border border-red-200 cursor-pointer animate-pulse";
+                showError(text);
             } else {
                 el.className = "bg-yellow-100 text-yellow-600 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase border border-yellow-200 cursor-pointer";
             }
         }
+
+        function showError(msg) {
+            const bar = document.getElementById('error-bar');
+            bar.classList.remove('hidden');
+            document.getElementById('error-msg').textContent = msg;
+        }
+
+        // --- CONFIGURAÇÃO MODAL ---
+        function openConfigModal() {
+            document.getElementById('conf-url').value = localStorage.getItem('crm_supabase_url_v3') || DEFAULT_URL;
+            document.getElementById('conf-key').value = localStorage.getItem('crm_supabase_key_v3') || DEFAULT_KEY;
+            document.getElementById('modal-config').classList.remove('hidden');
+        }
+
+        function closeConfigModal() {
+            document.getElementById('modal-config').classList.add('hidden');
+        }
+
+        document.getElementById('config-form').onsubmit = function(e) {
+            e.preventDefault();
+            const newUrl = document.getElementById('conf-url').value.trim();
+            const newKey = document.getElementById('conf-key').value.trim();
+            
+            if(newUrl && newKey) {
+                // Versão v3 para garantir limpeza de cache antigo
+                localStorage.setItem('crm_supabase_url_v3', newUrl);
+                localStorage.setItem('crm_supabase_key_v3', newKey);
+                alert("Configurações salvas! A página será recarregada.");
+                location.reload();
+            }
+        };
 
         // --- FUNÇÕES DE DADOS (SUPABASE) ---
 
         async function fetchLeads() {
             setLoading(true);
             try {
-                if(!supabase) throw new Error("Cliente Supabase não inicializado.");
+                if (!dbClient) throw new Error("Cliente não inicializado");
 
                 // Seleciona todos os dados da tabela 'leads'
-                const { data, error } = await supabase
+                // ALTERADO: Ordenar por 'id' desc porque 'created_at' pode não existir
+                const { data, error } = await dbClient
                     .from('leads')
                     .select('*')
-                    .order('created_at', { ascending: false });
+                    .order('id', { ascending: false }); 
 
-                if (error) throw error;
+                if (error) {
+                    // Erro de RLS (Permissão)
+                    if (error.code === '42501') {
+                        throw new Error("Permissão Negada (RLS). Execute o SQL de desbloqueio no Supabase.");
+                    }
+                    throw error;
+                }
 
                 leads = data || [];
                 renderStats();
@@ -573,37 +602,16 @@
 
             } catch (err) {
                 console.error("Erro Supabase:", err);
-                setStatus('Erro na Conexão (Clique para corrigir)', 'error');
+                let displayMsg = "Erro na Conexão";
+                if(err.message.includes("fetch")) displayMsg = "Erro de Rede (CORS/Bloqueio)";
+                if(err.message.includes("Permissão")) displayMsg = "Permissão Negada (RLS)";
+                if(err.message.includes("relation")) displayMsg = "Tabela 'leads' não existe";
                 
-                // Abre o modal automaticamente se for erro de autenticação ou conexão
-                if (err.message.includes("apikey") || err.message.includes("JWT") || err.code === "PGRST301" || !apiKey.startsWith('ey')) {
-                    // Pequeno delay para UX
-                    setTimeout(() => openConfigModal(), 500);
-                }
-
-                // Feedback visual na tabela
-                if(document.getElementById('view-list')) {
-                     const tbody = document.getElementById('leads-table-body');
-                     if(tbody) {
-                        tbody.innerHTML = `<tr><td colspan="100%" class="p-8 text-center">
-                            <div class="bg-red-50 border border-red-200 rounded-lg p-6 inline-block text-left shadow-sm max-w-lg">
-                                <h4 class="font-bold text-red-600 text-sm mb-3 flex items-center gap-2">
-                                    <i data-lucide="alert-triangle" class="w-5 h-5"></i> Falha na Conexão
-                                </h4>
-                                <p class="text-xs text-red-500 font-mono mb-4 bg-white p-2 border border-red-100 rounded">${err.message}</p>
-                                
-                                <div class="text-xs text-slate-600 space-y-2">
-                                    <p><strong>Possíveis Causas:</strong></p>
-                                    <ul class="list-disc pl-4 space-y-1">
-                                        <li>A chave API está errada (deve começar com <code>ey...</code>).</li>
-                                        <li>A tabela <code>leads</code> não foi criada no Supabase.</li>
-                                    </ul>
-                                </div>
-                                <button onclick="openConfigModal()" class="mt-4 w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded text-xs font-bold uppercase">Corrigir Configuração Agora</button>
-                            </div>
-                        </td></tr>`;
-                        lucide.createIcons();
-                     }
+                setStatus(displayMsg, 'error');
+                
+                // Abre config se for erro de chave
+                if (err.message.includes("apikey") || err.message.includes("JWT")) {
+                    setTimeout(() => openConfigModal(), 1000);
                 }
             } finally {
                 setLoading(false);
@@ -855,7 +863,7 @@
             
             const formData = new FormData(this);
             const data = Object.fromEntries(formData);
-            const id = data.id; // Se tem ID, é update. Se não, é create.
+            const id = data.id; 
             
             delete data.id;
 
@@ -865,13 +873,13 @@
 
             setLoading(true);
             try {
-                if(!supabase) throw new Error("Cliente Supabase não inicializado.");
+                if(!dbClient) throw new Error("Conexão perdida.");
                 
                 if (id) {
-                    const { error } = await supabase.from('leads').update(data).eq('id', id);
+                    const { error } = await dbClient.from('leads').update(data).eq('id', id);
                     if (error) throw error;
                 } else {
-                    const { error } = await supabase.from('leads').insert([data]);
+                    const { error } = await dbClient.from('leads').insert([data]);
                     if (error) throw error;
                 }
 
@@ -881,7 +889,6 @@
                 
             } catch (err) {
                 alert('Erro ao salvar: ' + err.message);
-                if (err.message.includes("apikey")) openConfigModal();
             } finally {
                 setLoading(false);
             }
@@ -893,9 +900,9 @@
             
             setLoading(true);
             try {
-                if(!supabase) throw new Error("Cliente Supabase não inicializado.");
+                if(!dbClient) throw new Error("Conexão perdida.");
 
-                const { error } = await supabase.from('leads').delete().eq('id', id);
+                const { error } = await dbClient.from('leads').delete().eq('id', id);
                 if (error) throw error;
                 fetchLeads();
             } catch (err) {
@@ -951,8 +958,8 @@
                 if (leadsToInsert.length > 0) {
                     setLoading(true);
                     try {
-                        if(!supabase) throw new Error("Cliente Supabase não inicializado.");
-                        const { error } = await supabase.from('leads').insert(leadsToInsert);
+                        if(!dbClient) throw new Error("Conexão perdida.");
+                        const { error } = await dbClient.from('leads').insert(leadsToInsert);
                         if (error) throw error;
                         alert(`${leadsToInsert.length} leads importados com sucesso!`);
                         fetchLeads();
@@ -985,7 +992,9 @@
         // --- INICIALIZAÇÃO ---
         window.onload = () => {
             document.getElementById('date-now').innerText = new Date().toLocaleDateString('pt-BR');
-            fetchLeads(); // Busca dados iniciais
+            if (initSupabase()) {
+                fetchLeads(); // Busca dados iniciais apenas se inicializar ok
+            }
         };
     </script>
 </body>
