@@ -3,9 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pipeline de Vendas - CRM</title>
+    <title>Pipeline de Vendas - CRM 3S</title>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Supabase JS Client (ADICIONADO) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         body { font-family: 'Inter', sans-serif; }
@@ -18,15 +26,30 @@
         .table-header { background-color: #f8fafc; color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 0.65rem; padding: 0.5rem 0.75rem; white-space: nowrap; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
         .filter-input { width: 100%; font-size: 0.65rem; padding: 2px 4px; border: 1px solid #e2e8f0; border-radius: 4px; margin-top: 4px; color: #334155; outline: none; }
         .filter-input:focus { border-color: #3b82f6; }
+        
+        /* Loading Overlay */
+        #loading-overlay {
+            position: fixed; inset: 0; background: rgba(255,255,255,0.8); 
+            z-index: 9999; display: flex; justify-content: center; align-items: center;
+            backdrop-filter: blur(2px);
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900">
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="hidden">
+        <div class="flex flex-col items-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-3"></div>
+            <p class="text-blue-600 font-bold text-sm animate-pulse">Sincronizando...</p>
+        </div>
+    </div>
 
     <div class="flex min-h-screen">
         <!-- Sidebar -->
         <aside class="w-64 bg-slate-900 text-white p-6 flex flex-col hidden md:flex transition-all duration-300 shadow-xl z-20">
             <div class="flex items-center justify-center gap-2 mb-10 w-full">
-                <!-- LOGO 3S STRATEGY (SIDEBAR) - AUMENTADA (w-24) -->
+                <!-- LOGO 3S STRATEGY -->
                 <div class="w-24 h-24 flex items-center justify-center overflow-hidden shrink-0 transition-transform hover:scale-105">
                     <img src="https://raw.githubusercontent.com/yasmim-3s/3s-assets/main/assets/imagens/Prancheta-14.png" alt="Logo 3S" class="w-full h-full object-contain drop-shadow-md">
                 </div>
@@ -57,8 +80,8 @@
                 <button onclick="exportCSV()" class="w-full flex items-center gap-3 px-4 py-2 text-xs text-slate-400 hover:text-white font-bold uppercase tracking-wider transition hover:bg-slate-800 rounded">
                     <i data-lucide="download" class="w-3 h-3"></i> Exportar Excel
                 </button>
-                <button onclick="resetData()" class="w-full flex items-center gap-3 px-4 py-2 text-xs text-red-400 hover:text-red-300 font-bold uppercase tracking-wider transition hover:bg-slate-800 rounded">
-                    <i data-lucide="trash-2" class="w-3 h-3"></i> Limpar Base
+                <button onclick="fetchLeads()" class="w-full flex items-center gap-3 px-4 py-2 text-xs text-emerald-400 hover:text-emerald-300 font-bold uppercase tracking-wider transition hover:bg-slate-800 rounded">
+                    <i data-lucide="refresh-cw" class="w-3 h-3"></i> Atualizar Dados
                 </button>
             </div>
         </aside>
@@ -67,10 +90,12 @@
         <main class="flex-1 flex flex-col h-screen overflow-hidden bg-white">
             <!-- Header -->
             <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0 shadow-sm z-10">
-                <h2 id="tab-title" class="font-black text-slate-800 uppercase tracking-widest text-sm italic">Resumo Geral</h2>
+                <div class="flex items-center gap-2">
+                    <h2 id="tab-title" class="font-black text-slate-800 uppercase tracking-widest text-sm italic">Resumo Geral</h2>
+                    <span id="connection-status" class="bg-yellow-100 text-yellow-600 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase border border-yellow-200">Conectando...</span>
+                </div>
                 <div class="flex items-center gap-4">
                     <span id="date-now" class="text-[10px] text-slate-500 font-bold uppercase tracking-widest hidden sm:block"></span>
-                    <!-- LOGO 3S STRATEGY (HEADER) -->
                     <div class="h-10 w-10 flex items-center justify-center overflow-hidden transition-transform hover:scale-110">
                          <img src="https://raw.githubusercontent.com/yasmim-3s/3s-assets/main/assets/imagens/Prancheta-14.png" alt="Logo" class="w-full h-full object-contain">
                     </div>
@@ -388,8 +413,13 @@
     </div>
 
     <script>
-        // --- CONFIGURAÇÃO INICIAL ---
-        let leads = JSON.parse(localStorage.getItem('3s_leads_v8')) || [];
+        // --- CONFIGURAÇÃO DO SUPABASE ---
+        const projectUrl = 'https://mypkcyjmvelpoiqiajgh.supabase.co';
+        const apiKey = 'sb_publishable_J-U1IgVJli32MDoKe51DSQ_QP58DXYX'; // Sua chave
+        const supabase = supabase.createClient(projectUrl, apiKey);
+
+        // --- ESTADO LOCAL ---
+        let leads = [];
         let activeFilters = {};
 
         // --- MAPA DE COLUNAS ---
@@ -413,6 +443,7 @@
             { key: 'motivo', label: 'Motivo_Desfecho', type: 'text' }
         ];
 
+        // --- FUNÇÕES DE NAVEGAÇÃO ---
         function switchTab(tab) {
             document.getElementById('view-dash').classList.toggle('hidden', tab !== 'dash');
             document.getElementById('view-list').classList.toggle('hidden', tab !== 'list');
@@ -427,6 +458,55 @@
                 renderTable();
             }
             lucide.createIcons();
+        }
+
+        function setLoading(isLoading) {
+            document.getElementById('loading-overlay').classList.toggle('hidden', !isLoading);
+        }
+
+        function setStatus(text, type) {
+            const el = document.getElementById('connection-status');
+            el.innerText = text;
+            if(type === 'success') {
+                el.className = "bg-emerald-100 text-emerald-600 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase border border-emerald-200";
+            } else if (type === 'error') {
+                el.className = "bg-red-100 text-red-600 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase border border-red-200";
+            } else {
+                el.className = "bg-yellow-100 text-yellow-600 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase border border-yellow-200";
+            }
+        }
+
+        // --- FUNÇÕES DE DADOS (SUPABASE) ---
+
+        async function fetchLeads() {
+            setLoading(true);
+            try {
+                // Seleciona todos os dados da tabela 'leads'
+                const { data, error } = await supabase
+                    .from('leads')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                leads = data || [];
+                renderStats();
+                if(!document.getElementById('view-list').classList.contains('hidden')) {
+                    renderHeader();
+                    renderTable();
+                }
+                lucide.createIcons();
+                setStatus('Conectado', 'success');
+
+            } catch (err) {
+                console.error("Erro Supabase:", err);
+                setStatus('Erro de Conexão', 'error');
+                if(err.message.includes('relation "leads" does not exist')) {
+                    alert('ERRO CRÍTICO: A tabela "leads" não existe no Supabase. Por favor, crie a tabela usando o código SQL fornecido.');
+                }
+            } finally {
+                setLoading(false);
+            }
         }
 
         // --- RENDER STATS (GERAL + YASMIM + SAUL) ---
@@ -446,9 +526,8 @@
 
             document.getElementById('stat-late').innerText = countLate(leads);
 
-            // 2. STATS INDIVIDUAIS (YASMIM E SAUL)
+            // 2. STATS INDIVIDUAIS
             const calcUserStats = (name) => {
-                // Filtra por nome (case insensitive include)
                 const userLeads = leads.filter(l => (l.responsavel || '').toLowerCase().includes(name.toLowerCase()));
                 return {
                     total: userLeads.length,
@@ -470,7 +549,6 @@
             document.getElementById('saul-open').innerText = saul.open;
             document.getElementById('saul-late').innerText = saul.late;
 
-
             // 3. GRÁFICOS
             const tMap = { Quente: 0, Morno: 0, Frio: 0 };
             leads.forEach(l => { 
@@ -491,7 +569,7 @@
             }).join('');
         }
 
-        // --- FUNÇÕES DA TABELA E FILTROS ---
+        // --- RENDER TABLE ---
         function renderHeader() {
             const thead = document.getElementById('table-head-container');
             thead.innerHTML = '';
@@ -587,12 +665,10 @@
             const today = new Date().toISOString().split('T')[0];
 
             let filtered = leads.filter(l => {
-                // Filtro Global Exato
                 if (term) {
-                     const match = Object.values(l).some(val => String(val).toLowerCase().trim() === term);
+                     const match = Object.values(l).some(val => String(val).toLowerCase().trim().includes(term));
                      if (!match) return false;
                 }
-                // Filtros de Coluna
                 return Object.keys(activeFilters).every(key => {
                     const filterVal = activeFilters[key];
                     const leadVal = String(l[key] || '').toLowerCase();
@@ -648,7 +724,8 @@
             lucide.createIcons();
         }
 
-        // --- CRUD BÁSICO ---
+        // --- CRUD ACTIONS ---
+
         function openModal(editId = null) {
             const form = document.getElementById('lead-form');
             form.reset();
@@ -671,53 +748,79 @@
 
         function closeModal() { document.getElementById('modal-lead').classList.add('hidden'); }
 
-        document.getElementById('lead-form').onsubmit = function(e) {
+        // SALVAR (CREATE / UPDATE)
+        document.getElementById('lead-form').onsubmit = async function(e) {
             e.preventDefault();
+            
             const formData = new FormData(this);
             const data = Object.fromEntries(formData);
-            const id = data.id;
+            const id = data.id; // Se tem ID, é update. Se não, é create.
+            
+            // Remove o campo ID do objeto de dados para não tentar salvar string vazia no banco
+            delete data.id;
 
-            if (id) {
-                const index = leads.findIndex(l => l.id == id);
-                if (index !== -1) leads[index] = { ...leads[index], ...data };
-            } else {
-                leads.push({ id: Date.now(), ...data });
+            // Corrige campos vazios para null para evitar erros de tipo se necessário, ou deixa string vazia
+            for (const key in data) {
+                if (data[key] === '') data[key] = null;
             }
 
-            saveAndRender();
-            this.reset();
-            closeModal();
+            setLoading(true);
+            try {
+                if (id) {
+                    // UPDATE
+                    const { error } = await supabase
+                        .from('leads')
+                        .update(data)
+                        .eq('id', id);
+                    
+                    if (error) throw error;
+                } else {
+                    // INSERT
+                    const { error } = await supabase
+                        .from('leads')
+                        .insert([data]);
+
+                    if (error) throw error;
+                }
+
+                closeModal();
+                this.reset();
+                fetchLeads(); // Recarrega tudo para garantir sincronia
+                
+            } catch (err) {
+                alert('Erro ao salvar: ' + err.message);
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
         };
 
-        function deleteLead(id) {
-            if(confirm('Tem certeza que deseja excluir este registro?')) {
-                leads = leads.filter(l => l.id !== id);
-                saveAndRender();
+        // DELETE
+        async function deleteLead(id) {
+            if(!confirm('Tem certeza que deseja excluir este registro do banco de dados?')) return;
+            
+            setLoading(true);
+            try {
+                const { error } = await supabase
+                    .from('leads')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+                fetchLeads();
+            } catch (err) {
+                alert('Erro ao deletar: ' + err.message);
+            } finally {
+                setLoading(false);
             }
         }
 
-        function resetData() {
-            if(confirm('ATENÇÃO: Isso apagará TODOS os dados. Deseja continuar?')) {
-                localStorage.removeItem('3s_leads_v8');
-                location.reload();
-            }
-        }
-
-        function saveAndRender() {
-            localStorage.setItem('3s_leads_v8', JSON.stringify(leads));
-            renderStats();
-            if(!document.getElementById('view-list').classList.contains('hidden')) {
-                renderHeader();
-                renderTable();
-            }
-            lucide.createIcons();
-        }
-
+        // --- IMPORT CSV ---
         function importCSV(input) {
             const file = input.files[0];
             const reader = new FileReader();
             
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 const text = e.target.result;
                 const rows = text.split('\n');
                 if (rows.length < 2) return alert("Arquivo vazio.");
@@ -733,26 +836,41 @@
 
                 if (mapIdx.empresa === -1) return alert(`Erro: Coluna '${COLUMNS[0].label}' não encontrada.`);
 
-                let count = 0;
+                let leadsToInsert = [];
+
                 for (let i = 1; i < rows.length; i++) {
                     const row = rows[i].trim();
                     if (!row) continue;
                     const cols = row.split(separator).map(c => c.replace(/"/g, '').trim());
+                    
                     if (cols[mapIdx.empresa]) {
-                        const newLead = { id: Date.now() + Math.random() };
+                        const newLead = {};
                         COLUMNS.forEach(col => {
                             if (mapIdx[col.key] > -1) {
-                                newLead[col.key] = cols[mapIdx[col.key]] || '';
+                                newLead[col.key] = cols[mapIdx[col.key]] || null;
                             }
                         });
+                        // Defaults
                         if(!newLead.status) newLead.status = 'Mapeado';
                         if(!newLead.temperatura) newLead.temperatura = 'Frio';
-                        leads.push(newLead);
-                        count++;
+                        
+                        leadsToInsert.push(newLead);
                     }
                 }
-                saveAndRender();
-                alert(`${count} leads importados!`);
+
+                if (leadsToInsert.length > 0) {
+                    setLoading(true);
+                    try {
+                        const { error } = await supabase.from('leads').insert(leadsToInsert);
+                        if (error) throw error;
+                        alert(`${leadsToInsert.length} leads importados com sucesso!`);
+                        fetchLeads();
+                    } catch (err) {
+                        alert('Erro na importação: ' + err.message);
+                    } finally {
+                        setLoading(false);
+                    }
+                }
             };
             reader.readAsText(file);
         }
@@ -773,9 +891,10 @@
             link.click();
         }
 
+        // --- INICIALIZAÇÃO ---
         window.onload = () => {
             document.getElementById('date-now').innerText = new Date().toLocaleDateString('pt-BR');
-            renderStats();
+            fetchLeads(); // Busca dados iniciais
         };
     </script>
 </body>
