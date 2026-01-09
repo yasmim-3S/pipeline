@@ -1,4 +1,4 @@
-YPE html>
+<!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
@@ -25,20 +25,20 @@ YPE html>
     <div class="flex min-h-screen">
         <!-- Sidebar -->
         <aside class="w-64 bg-slate-900 text-white p-6 flex flex-col hidden md:flex transition-all duration-300 shadow-xl z-20">
-            <div class="flex items-center gap-3 mb-10">
-                <!-- https://github.com/yasmim-3S/3s-assets/blob/6f52f72d5c51c8f40a679a4dd42ce531d1f22eb1/assets/imagens/Prancheta%2014.png (SIDEBAR) -->
-                <div class="h-10 w-10 rounded-lg bg-white flex items-center justify-center shadow-lg shadow-blue-500/20 overflow-hidden shrink-0">
-                    <!-- Substitua o src abaixo pelo link da sua logo -->
-                    <img src="https://placehold.co/100x100/2563eb/ffffff?text=3S" alt="Logo 3S" class="w-full h-full object-cover">
+            <div class="flex items-center justify-center gap-2 mb-10 w-full">
+                <!-- LOGO 3S STRATEGY (SIDEBAR) - AUMENTADA (w-24) -->
+                <div class="w-24 h-24 flex items-center justify-center overflow-hidden shrink-0 transition-transform hover:scale-105">
+                    <img src="https://raw.githubusercontent.com/yasmim-3s/3s-assets/main/assets/imagens/Prancheta-14.png" alt="Logo 3S" class="w-full h-full object-contain drop-shadow-md">
                 </div>
-                <div class="flex flex-col">
-                    <span class="font-bold tracking-tight text-lg leading-none">Pipeline</span>
-                    <span class="font-light text-xs opacity-70">de Vendas</span>
+                <!-- TEXTO -->
+                <div class="flex flex-col justify-center">
+                    <span class="font-bold tracking-tight text-xl leading-none">Pipeline</span>
+                    <span class="font-light text-xs opacity-70 tracking-widest uppercase mt-1">de Vendas</span>
                 </div>
             </div>
             
             <nav class="space-y-2 flex-1">
-                <button onclick="switchTab('dash')" id="nav-dash" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-600 text-white font-semibold transition text-sm">
+                <button onclick="switchTab('dash')" id="nav-dash" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-600 text-white font-semibold transition text-sm shadow-md shadow-blue-900/20">
                     <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
                 </button>
                 <button onclick="switchTab('list')" id="nav-list" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition text-sm">
@@ -51,13 +51,13 @@ YPE html>
 
             <div class="pt-6 border-t border-slate-800 space-y-2">
                 <input type="file" id="csv-import" accept=".csv" class="hidden" onchange="importCSV(this)">
-                <button onclick="document.getElementById('csv-import').click()" class="w-full flex items-center gap-3 px-4 py-2 text-xs text-blue-400 hover:text-blue-300 font-bold uppercase tracking-wider transition">
+                <button onclick="document.getElementById('csv-import').click()" class="w-full flex items-center gap-3 px-4 py-2 text-xs text-blue-400 hover:text-blue-300 font-bold uppercase tracking-wider transition hover:bg-slate-800 rounded">
                     <i data-lucide="upload" class="w-3 h-3"></i> Importar CSV
                 </button>
-                <button onclick="exportCSV()" class="w-full flex items-center gap-3 px-4 py-2 text-xs text-slate-400 hover:text-white font-bold uppercase tracking-wider transition">
+                <button onclick="exportCSV()" class="w-full flex items-center gap-3 px-4 py-2 text-xs text-slate-400 hover:text-white font-bold uppercase tracking-wider transition hover:bg-slate-800 rounded">
                     <i data-lucide="download" class="w-3 h-3"></i> Exportar Excel
                 </button>
-                <button onclick="resetData()" class="w-full flex items-center gap-3 px-4 py-2 text-xs text-red-400 hover:text-red-300 font-bold uppercase tracking-wider transition">
+                <button onclick="resetData()" class="w-full flex items-center gap-3 px-4 py-2 text-xs text-red-400 hover:text-red-300 font-bold uppercase tracking-wider transition hover:bg-slate-800 rounded">
                     <i data-lucide="trash-2" class="w-3 h-3"></i> Limpar Base
                 </button>
             </div>
@@ -70,9 +70,9 @@ YPE html>
                 <h2 id="tab-title" class="font-black text-slate-800 uppercase tracking-widest text-sm italic">Resumo Geral</h2>
                 <div class="flex items-center gap-4">
                     <span id="date-now" class="text-[10px] text-slate-500 font-bold uppercase tracking-widest hidden sm:block"></span>
-                    <!-- LOGO AQUI (HEADER) -->
-                    <div class="h-8 w-8 rounded-full bg-slate-900 flex items-center justify-center text-[10px] font-bold text-white shadow-md overflow-hidden border border-slate-200">
-                         <img src="https://placehold.co/100x100/0f172a/ffffff?text=3S" alt="Logo" class="w-full h-full object-cover">
+                    <!-- LOGO 3S STRATEGY (HEADER) -->
+                    <div class="h-10 w-10 flex items-center justify-center overflow-hidden transition-transform hover:scale-110">
+                         <img src="https://raw.githubusercontent.com/yasmim-3s/3s-assets/main/assets/imagens/Prancheta-14.png" alt="Logo" class="w-full h-full object-contain">
                     </div>
                 </div>
             </header>
