@@ -3,9 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pipeline de Vendas - CRM</title>
+    <title>Pipeline de Vendas - CRM 3S</title>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         body { font-family: 'Inter', sans-serif; }
@@ -26,11 +31,10 @@
         <!-- Sidebar -->
         <aside class="w-64 bg-slate-900 text-white p-6 flex flex-col hidden md:flex transition-all duration-300 shadow-xl z-20">
             <div class="flex items-center justify-center gap-2 mb-10 w-full">
-                <!-- LOGO 3S STRATEGY (SIDEBAR) - AUMENTADA (w-24) -->
+                <!-- LOGO -->
                 <div class="w-24 h-24 flex items-center justify-center overflow-hidden shrink-0 transition-transform hover:scale-105">
                     <img src="https://raw.githubusercontent.com/yasmim-3s/3s-assets/main/assets/imagens/Prancheta-14.png" alt="Logo 3S" class="w-full h-full object-contain drop-shadow-md">
                 </div>
-                <!-- TEXTO -->
                 <div class="flex flex-col justify-center">
                     <span class="font-bold tracking-tight text-xl leading-none">Pipeline</span>
                     <span class="font-light text-xs opacity-70 tracking-widest uppercase mt-1">de Vendas</span>
@@ -67,10 +71,11 @@
         <main class="flex-1 flex flex-col h-screen overflow-hidden bg-white">
             <!-- Header -->
             <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0 shadow-sm z-10">
-                <h2 id="tab-title" class="font-black text-slate-800 uppercase tracking-widest text-sm italic">Resumo Geral</h2>
+                <div class="flex items-center gap-2">
+                    <h2 id="tab-title" class="font-black text-slate-800 uppercase tracking-widest text-sm italic">Resumo Geral</h2>
+                </div>
                 <div class="flex items-center gap-4">
                     <span id="date-now" class="text-[10px] text-slate-500 font-bold uppercase tracking-widest hidden sm:block"></span>
-                    <!-- LOGO 3S STRATEGY (HEADER) -->
                     <div class="h-10 w-10 flex items-center justify-center overflow-hidden transition-transform hover:scale-110">
                          <img src="https://raw.githubusercontent.com/yasmim-3s/3s-assets/main/assets/imagens/Prancheta-14.png" alt="Logo" class="w-full h-full object-contain">
                     </div>
@@ -114,7 +119,6 @@
                             <i data-lucide="users" class="w-4 h-4"></i> Performance por SDR
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            
                             <!-- Card Yasmim -->
                             <div class="bg-white rounded-2xl border border-pink-100 shadow-sm overflow-hidden">
                                 <div class="bg-pink-50/50 p-4 border-b border-pink-100 flex justify-between items-center">
@@ -170,7 +174,6 @@
                                     </div>
                                 </div>
                             </div>
-
                         </div>
                     </div>
 
@@ -226,7 +229,7 @@
                                 <div class="bg-slate-50 p-4 rounded-full">
                                     <i data-lucide="file-spreadsheet" class="w-8 h-8 opacity-40"></i>
                                 </div>
-                                <p>Nenhum registro encontrado.</p>
+                                <p>Nenhum registo encontrado.</p>
                             </div>
                         </div>
                     </div>
@@ -386,3 +389,411 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // --- CONFIGURAÇÃO INICIAL (LocalStorage) ---
+        // Usa uma chave diferente para não conflitar com testes antigos
+        const STORAGE_KEY = '3s_crm_data_v1';
+        let leads = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        let activeFilters = {};
+
+        // --- MAPA DE COLUNAS ---
+        const COLUMNS = [
+            { key: 'empresa', label: 'Lead_Empresa', type: 'text' },
+            { key: 'categoria', label: 'Categoria', type: 'select' },
+            { key: 'setor', label: 'Setor', type: 'select' },
+            { key: 'segmento', label: 'Segmento', type: 'select' },
+            { key: 'local', label: 'Local_Regiao', type: 'select' },
+            { key: 'responsavel', label: 'Responsavel_3S', type: 'select' },
+            { key: 'data_inicio', label: 'Data_Inicio', type: 'date' },
+            { key: 'canal', label: 'Canal_Prospeccao', type: 'select' },
+            { key: 'contato_nome', label: 'Nome_Contato', type: 'text' },
+            { key: 'contato_cargo', label: 'Cargo_Contato', type: 'text' },
+            { key: 'temperatura', label: 'Temperatura', type: 'select' },
+            { key: 'prioridade', label: 'Prioridade', type: 'select' },
+            { key: 'status', label: 'Status_Atual', type: 'select' },
+            { key: 'data_previsao', label: 'Data_Prevista_Retorno', type: 'date' },
+            { key: 'data_real_retorno', label: 'Data_Real_Retorno', type: 'date' },
+            { key: 'resultado', label: 'Resultado', type: 'text' },
+            { key: 'motivo', label: 'Motivo_Desfecho', type: 'text' }
+        ];
+
+        // --- FUNÇÕES DE NAVEGAÇÃO ---
+        function switchTab(tab) {
+            document.getElementById('view-dash').classList.toggle('hidden', tab !== 'dash');
+            document.getElementById('view-list').classList.toggle('hidden', tab !== 'list');
+            
+            document.getElementById('nav-dash').classList.toggle('bg-blue-600', tab === 'dash');
+            document.getElementById('nav-dash').classList.toggle('text-white', tab === 'dash');
+            document.getElementById('nav-list').classList.toggle('bg-blue-600', tab === 'list');
+            document.getElementById('nav-list').classList.toggle('text-white', tab === 'list');
+            
+            if(tab === 'list') {
+                renderHeader();
+                renderTable();
+            }
+            lucide.createIcons();
+        }
+
+        // --- FUNÇÕES DE DADOS (LOCALSTORAGE) ---
+
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(leads));
+            renderStats();
+            if(!document.getElementById('view-list').classList.contains('hidden')) {
+                renderHeader();
+                renderTable();
+            }
+        }
+
+        function resetData() {
+            if(confirm('Tem a certeza que deseja apagar TODOS os dados locais?')) {
+                localStorage.removeItem(STORAGE_KEY);
+                leads = [];
+                saveData();
+                location.reload();
+            }
+        }
+
+        // --- RENDER STATS (GERAL + YASMIM + SAUL) ---
+        function renderStats() {
+            const today = new Date().toISOString().split('T')[0];
+            
+            // 1. STATS GERAIS
+            document.getElementById('stat-total').innerText = leads.length;
+            document.getElementById('stat-calls').innerText = leads.filter(l => l.status === 'Call Agendada').length;
+            document.getElementById('stat-waiting').innerText = leads.filter(l => l.status === 'Aguardando Retorno').length;
+            
+            const countLate = (list) => list.filter(l => {
+                if(l.status === 'Call Agendada' || l.status === 'Negativa') return false;
+                if(!l.data_previsao) return false;
+                return l.data_previsao < today;
+            }).length;
+
+            document.getElementById('stat-late').innerText = countLate(leads);
+
+            // 2. STATS INDIVIDUAIS
+            const calcUserStats = (name) => {
+                const userLeads = leads.filter(l => (l.responsavel || '').toLowerCase().includes(name.toLowerCase()));
+                return {
+                    total: userLeads.length,
+                    calls: userLeads.filter(l => l.status === 'Call Agendada').length,
+                    open: userLeads.filter(l => l.status === 'Aguardando Retorno' || l.status === 'Prospecção Ativa').length,
+                    late: countLate(userLeads)
+                };
+            };
+
+            const yasmim = calcUserStats('Yasmim');
+            document.getElementById('yas-total').innerText = `${yasmim.total} Leads`;
+            document.getElementById('yas-calls').innerText = yasmim.calls;
+            document.getElementById('yas-open').innerText = yasmim.open;
+            document.getElementById('yas-late').innerText = yasmim.late;
+
+            const saul = calcUserStats('Saul');
+            document.getElementById('saul-total').innerText = `${saul.total} Leads`;
+            document.getElementById('saul-calls').innerText = saul.calls;
+            document.getElementById('saul-open').innerText = saul.open;
+            document.getElementById('saul-late').innerText = saul.late;
+
+            // 3. GRÁFICOS
+            const tMap = { Quente: 0, Morno: 0, Frio: 0 };
+            leads.forEach(l => { 
+                const t = l.temperatura || 'Frio'; 
+                if(tMap[t] !== undefined) tMap[t]++; else tMap['Frio']++;
+            });
+            document.getElementById('chart-temp').innerHTML = Object.entries(tMap).map(([k, v]) => {
+                const p = leads.length ? (v/leads.length*100) : 0;
+                const color = k === 'Quente' ? 'bg-red-500' : k === 'Morno' ? 'bg-orange-500' : 'bg-blue-500';
+                return `<div class="space-y-1"><div class="flex justify-between text-[10px] font-black uppercase text-slate-600"><span>${k}</span><span>${v}</span></div><div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden"><div class="h-full ${color}" style="width:${p}%"></div></div></div>`;
+            }).join('');
+
+            const rMap = {};
+            leads.forEach(l => { const loc = l.local || 'N/A'; rMap[loc] = (rMap[loc] || 0) + 1; });
+            document.getElementById('chart-region').innerHTML = Object.entries(rMap).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([k, v]) => {
+                const p = leads.length ? (v/leads.length*100) : 0;
+                return `<div class="space-y-1"><div class="flex justify-between text-[10px] font-black uppercase text-slate-600"><span>${k}</span><span>${v}</span></div><div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-slate-800" style="width:${p}%"></div></div></div>`;
+            }).join('');
+        }
+
+        // --- RENDER TABLE ---
+        function renderHeader() {
+            const thead = document.getElementById('table-head-container');
+            thead.innerHTML = '';
+
+            const actionsTh = document.createElement('th');
+            actionsTh.className = 'table-header w-10 text-center sticky left-0 z-20';
+            actionsTh.style.backgroundColor = '#f8fafc';
+            actionsTh.innerHTML = '<div>#</div>';
+            
+            const clearBtn = document.createElement('button');
+            clearBtn.innerHTML = '<i data-lucide="filter-x" class="w-3 h-3 text-red-400"></i>';
+            clearBtn.title = "Limpar Filtros";
+            clearBtn.onclick = clearAllFilters;
+            clearBtn.className = "mt-2";
+            actionsTh.appendChild(clearBtn);
+
+            const tr = document.createElement('tr');
+            tr.appendChild(actionsTh);
+
+            COLUMNS.forEach(col => {
+                const th = document.createElement('th');
+                th.className = 'table-header';
+                
+                const titleDiv = document.createElement('div');
+                titleDiv.innerText = col.label;
+                th.appendChild(titleDiv);
+
+                let filterInput;
+                if (col.type === 'select') {
+                    filterInput = document.createElement('select');
+                    filterInput.className = 'filter-input bg-white';
+                    const defaultOpt = document.createElement('option');
+                    defaultOpt.value = '';
+                    defaultOpt.innerText = 'Todos';
+                    filterInput.appendChild(defaultOpt);
+
+                    const uniqueValues = [...new Set(leads.map(l => l[col.key]).filter(v => v))].sort();
+                    uniqueValues.forEach(val => {
+                        const opt = document.createElement('option');
+                        opt.value = val;
+                        opt.innerText = val;
+                        filterInput.appendChild(opt);
+                    });
+                } else if (col.type === 'date') {
+                    filterInput = document.createElement('input');
+                    filterInput.type = 'date';
+                    filterInput.className = 'filter-input';
+                } else {
+                    filterInput = document.createElement('input');
+                    filterInput.type = 'text';
+                    filterInput.placeholder = 'Filtrar...';
+                    filterInput.className = 'filter-input';
+                }
+
+                if (activeFilters[col.key]) {
+                    filterInput.value = activeFilters[col.key];
+                    filterInput.classList.add('border-blue-500', 'bg-blue-50');
+                }
+
+                filterInput.onchange = (e) => {
+                    const val = e.target.value.toLowerCase();
+                    if (val) activeFilters[col.key] = val;
+                    else delete activeFilters[col.key];
+                    renderHeader(); 
+                    renderTable();
+                };
+                if (col.type === 'text') {
+                    filterInput.onkeyup = (e) => {
+                         const val = e.target.value.toLowerCase();
+                        if (val) activeFilters[col.key] = val;
+                        else delete activeFilters[col.key];
+                        renderTable();
+                    };
+                }
+
+                th.appendChild(filterInput);
+                tr.appendChild(th);
+            });
+
+            thead.appendChild(tr);
+            lucide.createIcons();
+        }
+
+        function clearAllFilters() {
+            activeFilters = {};
+            renderHeader();
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('leads-table-body');
+            const term = document.getElementById('global-search').value.toLowerCase().trim();
+            const today = new Date().toISOString().split('T')[0];
+
+            let filtered = leads.filter(l => {
+                if (term) {
+                     const match = Object.values(l).some(val => String(val).toLowerCase().trim().includes(term));
+                     if (!match) return false;
+                }
+                return Object.keys(activeFilters).every(key => {
+                    const filterVal = activeFilters[key];
+                    const leadVal = String(l[key] || '').toLowerCase();
+                    return leadVal.includes(filterVal); 
+                });
+            });
+
+            filtered.sort((a,b) => {
+               const pMap = { 'Alta': 3, 'Média': 2, 'Baixa': 1 };
+               const pA = pMap[a.prioridade] || 0;
+               const pB = pMap[b.prioridade] || 0;
+               if (pA !== pB) return pB - pA;
+               return (a.data_previsao || '9999').localeCompare(b.data_previsao || '9999');
+            });
+
+            document.getElementById('table-count').innerText = `${filtered.length} Registros`;
+            
+            if(filtered.length === 0) {
+                document.getElementById('empty-state').classList.remove('hidden');
+                tbody.innerHTML = '';
+                return;
+            }
+            document.getElementById('empty-state').classList.add('hidden');
+
+            tbody.innerHTML = filtered.map((l) => {
+                const late = l.data_previsao && l.data_previsao < today && l.status !== 'Call Agendada' && l.status !== 'Negativa';
+                const rowClass = late ? 'bg-red-50/50' : '';
+                
+                let cells = `<td class="table-cell-dense text-center font-bold text-slate-300 border-r border-slate-100 sticky left-0 bg-white z-10 flex gap-1 justify-center items-center h-full">
+                                <button onclick="openModal(${l.id})" class="hover:text-blue-600"><i data-lucide="edit-2" class="w-3 h-3"></i></button>
+                                <button onclick="deleteLead(${l.id})" class="hover:text-red-600"><i data-lucide="trash" class="w-3 h-3"></i></button>
+                             </td>`;
+                
+                COLUMNS.forEach(col => {
+                    let val = l[col.key] || '-';
+                    let style = 'text-slate-600';
+                    
+                    if(col.key === 'empresa') style = 'font-bold text-slate-800 uppercase';
+                    if(col.key === 'status') style = 'font-bold text-blue-600 uppercase text-[9px] bg-blue-50 px-1 rounded';
+                    if(col.key === 'prioridade' && val === 'Alta') style = 'font-black text-red-600 uppercase';
+                    if(col.key === 'data_previsao' && late) style = 'font-bold text-red-500 animate-pulse';
+
+                    if(col.key.includes('data') && val !== '-') {
+                        try { val = new Date(val + 'T12:00:00').toLocaleDateString('pt-BR'); } catch(e){}
+                    }
+
+                    cells += `<td class="table-cell-dense ${style} border-r border-slate-50">${val}</td>`;
+                });
+
+                return `<tr class="hover:bg-blue-50/30 transition-colors ${rowClass}">${cells}</tr>`;
+            }).join('');
+            
+            lucide.createIcons();
+        }
+
+        // --- CRUD ACTIONS (LOCALSTORAGE) ---
+
+        function openModal(editId = null) {
+            const form = document.getElementById('lead-form');
+            form.reset();
+            document.getElementById('lead-id').value = '';
+            document.getElementById('modal-title').innerText = 'CADASTRAR NOVO LEAD';
+
+            if (editId) {
+                const lead = leads.find(l => l.id == editId);
+                if (lead) {
+                    document.getElementById('lead-id').value = lead.id;
+                    COLUMNS.forEach(col => {
+                        const input = document.getElementById(`f-${col.key}`);
+                        if(input) input.value = lead[col.key] || '';
+                    });
+                    document.getElementById('modal-title').innerText = `EDITAR: ${lead.empresa}`;
+                }
+            }
+            document.getElementById('modal-lead').classList.remove('hidden');
+        }
+
+        function closeModal() { document.getElementById('modal-lead').classList.add('hidden'); }
+
+        // SALVAR (CREATE / UPDATE)
+        document.getElementById('lead-form').onsubmit = function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+            const id = data.id; 
+            
+            delete data.id;
+
+            if (id) {
+                const index = leads.findIndex(l => l.id == id);
+                if (index !== -1) {
+                    leads[index] = { ...leads[index], ...data };
+                }
+            } else {
+                leads.push({ id: Date.now(), ...data });
+            }
+
+            saveData();
+            closeModal();
+            this.reset();
+        };
+
+        // DELETE
+        function deleteLead(id) {
+            if(!confirm('Tem certeza que deseja excluir este registo?')) return;
+            leads = leads.filter(l => l.id != id);
+            saveData();
+        }
+
+        // --- IMPORT CSV ---
+        function importCSV(input) {
+            const file = input.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const rows = text.split('\n');
+                if (rows.length < 2) return alert("Arquivo vazio.");
+
+                const firstLine = rows[0].trim();
+                const separator = firstLine.includes(';') ? ';' : ',';
+                const headers = firstLine.split(separator).map(h => h.trim().replace(/"/g, ''));
+
+                const mapIdx = {};
+                COLUMNS.forEach(col => {
+                    mapIdx[col.key] = headers.findIndex(h => h.toLowerCase() === col.label.toLowerCase());
+                });
+
+                if (mapIdx.empresa === -1) return alert(`Erro: Coluna '${COLUMNS[0].label}' não encontrada.`);
+
+                let count = 0;
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i].trim();
+                    if (!row) continue;
+                    const cols = row.split(separator).map(c => c.replace(/"/g, '').trim());
+                    
+                    if (cols[mapIdx.empresa]) {
+                        const newLead = { id: Date.now() + Math.random() };
+                        COLUMNS.forEach(col => {
+                            if (mapIdx[col.key] > -1) {
+                                newLead[col.key] = cols[mapIdx[col.key]] || '';
+                            }
+                        });
+                        // Defaults
+                        if(!newLead.status) newLead.status = 'Mapeado';
+                        if(!newLead.temperatura) newLead.temperatura = 'Frio';
+                        
+                        leads.push(newLead);
+                        count++;
+                    }
+                }
+                saveData();
+                alert(`${count} leads importados com sucesso!`);
+            };
+            reader.readAsText(file);
+        }
+
+        function exportCSV() {
+            if (!leads.length) return alert('Sem dados.');
+            const headerRow = COLUMNS.map(c => c.label).join(';');
+            const dataRows = leads.map(l => {
+                return COLUMNS.map(col => {
+                    let val = l[col.key] || '';
+                    return `"${val}"`;
+                }).join(';');
+            }).join('\n');
+            const csvContent = "\uFEFF" + headerRow + "\n" + dataRows;
+            const link = document.createElement("a");
+            link.href = "data:text/csv;charset=utf-8," + encodeURI(csvContent);
+            link.download = "base_3s_strategy_completa.csv";
+            link.click();
+        }
+
+        // --- INICIALIZAÇÃO ---
+        window.onload = () => {
+            document.getElementById('date-now').innerText = new Date().toLocaleDateString('pt-BR');
+            renderStats(); // Inicializa dados locais
+        };
+    </script>
+</body>
+</html>
